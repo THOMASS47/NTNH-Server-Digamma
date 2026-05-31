@@ -2,7 +2,7 @@
 
 Server-side version of the **Nuclear Tech: New Horizons** modpack for Minecraft 1.7.10.
 
-> ⚠️ **This repository is auto-generated** from the [client repository](https://github.com/NTNewHorizons/NTNH). Do not edit files in `mods/`, `config/`, `scripts/` or `serverutilities/` manually — they will be overwritten on the next update.
+> ⚠️ **This repository is auto-generated** from the [client repository](https://github.com/NTNewHorizons/NTNH). Do not edit files in `mods/`, `config/`, `scripts/` or `serverutilities/` manually - they will be overwritten on the next update.
 
 ---
 
@@ -45,7 +45,7 @@ The installer checks your Java version, clones the server files, accepts the Moj
 The updater force-syncs **tracked files** (everything stored in this repo) to the latest upstream version. **Untracked files are never touched.**
 
 **Preserved (untracked):**
-- `world/` — map, player data, inventories
+- `world/` - map, player data, inventories
 - `server.properties`, `eula.txt`
 - `ops.json`, `whitelist.json`, `banned-*.json`
 - `logs/`, `crash-reports/`, `backups/`, `dynmap/`
