@@ -3,7 +3,7 @@ set -e
 
 # NTNH Server Installer
 # Usage: ./install.sh          - First-time install (clone + setup)
-#        ./install.sh --update - Update existing server (preserves world/)
+#        ./install.sh --update - Update existing server (syncs tracked files, preserves world/ and all untracked data)
 
 # Check for Java 8 (Minecraft 1.7.10 requires exactly Java 8)
 echo "Checking Java version..."
@@ -14,7 +14,7 @@ java -version 2>&1 | grep -q "1.8" || {
 }
 echo "Java 8 detected."
 
-# Update mode: fetch latest and force-sync tracked files while preserving untracked data
+# Update mode: force-sync tracked files with upstream, leave untracked data untouched
 if [ "$1" == "--update" ]; then
     echo "Updating server files from NTNH-Server..."
     git fetch origin main
@@ -38,7 +38,12 @@ echo "eula=true" > eula.txt
 cat > start.sh <<'EOF'
 #!/bin/bash
 cd "$(dirname "$0")"
-java -Xms4G -Xmx8G      -XX:+UseG1GC      -XX:+UnlockExperimentalVMOptions      -XX:MaxGCPauseMillis=100      -jar forge-1.7.10-10.13.4.1614-1.7.10-universal.jar      nogui
+java -Xms4G -Xmx8G \
+     -XX:+UseG1GC \
+     -XX:+UnlockExperimentalVMOptions \
+     -XX:MaxGCPauseMillis=100 \
+     -jar forge-1.7.10-10.13.4.1614-1.7.10-universal.jar \
+     nogui
 EOF
 chmod +x start.sh
 
