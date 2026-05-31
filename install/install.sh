@@ -14,11 +14,43 @@ java -version 2>&1 | grep -q "1.8" || {
 }
 echo "Java 8 detected."
 
+# Check for Git LFS
+LFS_AVAILABLE=false
+if git lfs version >/dev/null 2>&1; then
+    LFS_AVAILABLE=true
+    echo "Git LFS detected."
+else
+    echo "WARNING: Git LFS not found. Large files will be downloaded manually (slower)."
+    echo "Install Git LFS for better performance: sudo apt install git-lfs"
+fi
+
+# Function to resolve LFS pointers to actual files
+resolve_lfs_pointers() {
+    if [ "$LFS_AVAILABLE" = true ]; then
+        git lfs pull
+        return
+    fi
+
+    echo "Resolving LFS pointers manually..."
+    find mods -name "*.jar" -type f | while read -r pointer; do
+        # Check if file is an LFS pointer
+        if head -n 1 "$pointer" | grep -q "version https://git-lfs.github.com/spec/v1"; then
+            filename=$(basename "$pointer")
+            echo "  Downloading: $filename"
+            encoded=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$filename'))" 2>/dev/null || echo "$filename")
+            curl -sL -o "$pointer" "https://github.com/NTNewHorizons/NTNH-Server/raw/main/mods/$encoded" || {
+                echo "  FAILED: $filename"
+            }
+        fi
+    done
+}
+
 # Update mode: force-sync tracked files with upstream, leave untracked data untouched
 if [ "$1" == "--update" ]; then
     echo "Updating server files from NTNH-Server..."
     git fetch origin main
     git reset --hard origin/main
+    resolve_lfs_pointers
     echo "Update complete. Restart the server to apply changes."
     exit 0
 fi
@@ -26,9 +58,19 @@ fi
 # First-time install
 if [ ! -d ".git" ]; then
     echo "Cloning NTNH-Server repository..."
+    if [ "$LFS_AVAILABLE" = true ]; then
+        git lfs install
+    fi
     git clone https://github.com/NTNewHorizons/NTNH-Server.git .
+    resolve_lfs_pointers
 else
     echo "Already in NTNH-Server repository, skipping clone..."
+    if [ "$LFS_AVAILABLE" = true ]; then
+        git lfs install
+        git lfs pull
+    else
+        resolve_lfs_pointers
+    fi
 fi
 
 # Accept Mojang EULA automatically
