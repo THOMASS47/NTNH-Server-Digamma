@@ -57,12 +57,29 @@ fi
 
 # First-time install
 if [ ! -d ".git" ]; then
-    echo "Cloning NTNH-Server repository..."
-    if [ "$LFS_AVAILABLE" = true ]; then
-        git lfs install
+    # If current directory is empty, clone into '.' as before.
+    if [ -z "$(ls -A)" ]; then
+        echo "Cloning NTNH-Server repository into current directory..."
+        if [ "$LFS_AVAILABLE" = true ]; then
+            git lfs install
+        fi
+        git clone https://github.com/NTNewHorizons/NTNH-Server.git .
+        resolve_lfs_pointers
+    else
+        # Safe fallback: don't clone into a non-empty directory. Clone into a new subdirectory instead.
+        timestamp=$(date +%s)
+        clone_dir="NTNH-Server-clone-${timestamp}"
+        echo "Current directory is not empty. To avoid overwriting files, cloning into './${clone_dir}' instead..."
+        if [ "$LFS_AVAILABLE" = true ]; then
+            git lfs install
+        fi
+        git clone https://github.com/NTNewHorizons/NTNH-Server.git "${clone_dir}"
+        echo "Repository cloned into ./${clone_dir}"
+        # Resolve LFS pointers inside the cloned directory
+        (cd "${clone_dir}" && resolve_lfs_pointers)
+        echo "To use this as your server directory, move or merge files from ./${clone_dir} into the desired location."
+        exit 0
     fi
-    git clone https://github.com/NTNewHorizons/NTNH-Server.git .
-    resolve_lfs_pointers
 else
     echo "Already in NTNH-Server repository, skipping clone..."
     if [ "$LFS_AVAILABLE" = true ]; then
