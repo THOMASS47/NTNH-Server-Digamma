@@ -2,98 +2,53 @@
 
 Server-side version of the **Nuclear Tech: New Horizons** modpack for Minecraft 1.7.10.
 
-> ⚠️ **This repository is auto-generated** from the [client repository](https://github.com/NTNewHorizons/NTNH). Do not edit files in `mods/`, `config/`, `scripts/` or `serverutilities/` manually - they will be overwritten on the next update.
-
----
-
-## How It Works
-
-We maintain **two repositories**:
-
-| Repository | Purpose | What lives there |
-|---|---|---|
-| `NTNewHorizons/NTNH` | Client pack | All mods, configs, scripts |
-| `NTNewHorizons/NTNH-Server` | Server pack | Same files minus client-only mods, plus server installer & Docker files |
-
-Whenever a **release** is published on the client repo, a GitHub Action automatically:
-1. Reads `server/client-only.txt` from the client repo
-2. Copies everything **except** the listed client-only files
-3. Pushes the result here
+> ⚠️ This repository is **auto-generated** from the [client repo](https://github.com/NTNewHorizons/NTNH). Files in `mods/`, `config/`, `scripts/`, `serverutilities/` are overwritten on each release.
 
 ---
 
 ## Quick Start
 
-### Requirements
-- **Java 8** (OpenJDK or Oracle, exactly version 8 - newer versions will crash 1.7.10)
-- **4 GB RAM** minimum, **8 GB** recommended
-- Linux, macOS, or Windows
-
-### First-Time Install
+**Requirements:** Java 8, 4 GB+ RAM
 
 ```bash
-git clone https://github.com/NTNewHorizons/NTNH-Server.git ntnh-server
-cd ntnh-server
-chmod +x ./install/install.sh
-./install/install.sh
+git clone https://github.com/NTNewHorizons/NTNH-Server.git
+cd NTNH-Server
+./start.sh
 ```
 
-The installer checks your Java version, clones the server files, accepts the Mojang EULA, and creates `start.sh`.
+That's it. `start.sh` checks Java, accepts the EULA, resolves LFS files, and launches the server.
 
-### Updating an Existing Server
-
-The updater force-syncs **tracked files** (everything stored in this repo) to the latest upstream version. **Untracked files are never touched.**
-
-**Preserved (untracked):**
-- `world/` - map, player data, inventories
-- `server.properties`, `eula.txt`
-- `ops.json`, `whitelist.json`, `banned-*.json`
-- `logs/`, `crash-reports/`, `backups/`, `dynmap/`
-- Any custom files or plugins you added
-
-**Overwritten (tracked):**
-- `mods/`, `config/`, `scripts/`, `serverutilities/`
-- `install/`, `README.md`, `knownkeys.txt`, etc.
+### Updating
 
 ```bash
-cd ntnh-server
-./install/install.sh --update
+./start.sh --update
 ```
 
-This runs `git fetch origin main && git reset --hard origin/main`, which guarantees the update succeeds even if you previously deleted or modified tracked files locally. Restart the server after updating.
+Force-syncs all tracked files to the latest upstream version. Your `world/`, `server.properties`, `ops.json`, `whitelist.json`, `logs/`, and other untracked data are never touched.
 
-> **Tip:** If you customized a tracked config file and want to keep those edits, back it up before updating. Consider moving persistent custom settings into untracked files or scripts where possible.
-
----
-
-## Docker
-
-If you prefer containers:
+### Docker
 
 ```bash
-cd install/docker
+cd docker
 docker compose up -d
 ```
 
-The world and backups are stored in local volumes (`./world`, `./backups`).
-
-To update:
-```bash
-git pull
-docker compose up -d --build
-```
-
 ---
 
-## Client-Only Mods
+## How It Works
 
-The client repo maintains a file called `server/client-only.txt` that lists mods which should never exist on a server (e.g. minimaps, HUD mods, visual effects).
+The server pack is generated from the client repo on each release. A GitHub Action strips client-only mods and publishes the result here.
 
-If a mod is missing here and you think it should be, open an issue on the **client repository** - that is where the list is maintained.
+Files you can edit freely (never overwritten):
+- `server.properties`, `ops.json`, `whitelist.json`, `banned-*.json`
+- `world/`, `logs/`, `crash-reports/`, `backups/`
+
+Files reset on update:
+- `mods/`, `config/`, `scripts/`, `serverutilities/`
+- `README.md`, `knownkeys.txt`, `localconfig.cfg`
 
 ---
 
 ## Support
 
-- **Bugs & mod issues:** [NTNH Issues](https://github.com/NTNewHorizons/NTNH/issues)
-- **Server setup issues:** [NTNH-Server Issues](https://github.com/NTNewHorizons/NTNH-Server/issues)
+[Bugs & mod issues](https://github.com/NTNewHorizons/NTNH/issues) · [Server issues](https://github.com/NTNewHorizons/NTNH-Server/issues)

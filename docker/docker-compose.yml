@@ -12,11 +12,11 @@ services:
       - "25565:25565/tcp"
       - "25565:25565/udp"
     volumes:
-      - ./world:/server/world
-      - ./backups:/server/backups
-      - ./logs:/server/logs
-      - ./crash-reports:/server/crash-reports
-      - ./server.properties:/server/server.properties:ro
+      - ../world:/server/world
+      - ../backups:/server/backups
+      - ../logs:/server/logs
+      - ../crash-reports:/server/crash-reports
+      - ../server.properties:/server/server.properties:ro
     environment:
       - EULA=true
       - JVM_OPTS=-Xms6G -Xmx12G -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=100
