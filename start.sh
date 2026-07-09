@@ -39,4 +39,4 @@ fi
 # JVM options — override via JVM_OPTS env var (e.g. Docker)
 : "${JVM_OPTS:=-Xms4G -Xmx8G -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=100}"
 
-exec java $JVM_OPTS -jar forge-1.7.10-10.13.4.1614-1.7.10-universal.jar nogui
+exec java $JVM_OPTS -jar server.jar nogui

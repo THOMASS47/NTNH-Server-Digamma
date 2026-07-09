@@ -1,1 +1,4 @@
 mods/HBM-*.jar filter=lfs diff=lfs merge=lfs -text
+server.jar filter=lfs diff=lfs merge=lfs -text
+minecraft_server.*.jar filter=lfs diff=lfs merge=lfs -text
+libraries.zip filter=lfs diff=lfs merge=lfs -text
