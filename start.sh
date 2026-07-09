@@ -36,7 +36,9 @@ if [ -d .git ] && ! git lfs version >/dev/null 2>&1; then
     done
 fi
 
-# JVM options — override via JVM_OPTS env var (e.g. Docker)
-: "${JVM_OPTS:=-Xms4G -Xmx8G -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=100}"
+# JVM options from server-args.txt (can be overridden via JVM_OPTS env var)
+if [ -f server-args.txt ] && [ -z "${JVM_OPTS+set}" ]; then
+    JVM_OPTS=$(tr '\n' ' ' < server-args.txt)
+fi
 
 exec java $JVM_OPTS -jar server.jar nogui
