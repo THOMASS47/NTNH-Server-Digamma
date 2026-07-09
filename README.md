@@ -19,7 +19,7 @@ cd NTNH-Server
 
 That's it. `start.sh` checks Java, accepts the EULA, pulls LFS files, and launches the server.
 
-> If you can't install Git LFS, don't worry — `start.sh` automatically falls back to downloading large files via curl.
+> If you can't install Git LFS, don't worry - `start.sh` automatically falls back to downloading large files via curl.
 
 ### Updating
 
@@ -31,7 +31,7 @@ Force-syncs all tracked files to the latest upstream version. Your `world/`, `se
 
 ### Customizing (Forking)
 
-Want to tweak the modpack for your server — add/remove mods, change configs, edit scripts?
+Want to tweak the modpack for your server - add/remove mods, change configs, edit scripts?
 
 1. **Fork** this repo on GitHub
 2. `git clone https://github.com/YOUR_USER/NTNH-Server.git`
