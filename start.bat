@@ -31,24 +31,7 @@ if exist .git (
     git lfs version >nul 2>&1
     if errorlevel 1 (
         echo Resolving LFS pointers (install git-lfs for faster clones)...
-        for /r . %%f in (*) do (
-            echo %%f | findstr /i /c:"\.git" >nul && set "skip=1" || set "skip="
-            if not defined skip (
-                set "firstline="
-                set /p firstline=<"%%f"
-                if defined firstline (
-                    echo !firstline! | findstr /c:"version https://git-lfs.github.com/spec/v1" >nul
-                    if not errorlevel 1 (
-                        set "rel=%%f"
-                        set "rel=!rel:%CD%\=!"
-                        echo   Downloading: !rel!
-                        for /f "delims=" %%e in ('powershell -Command "[System.Uri]::EscapeDataString('!rel!')" 2^>nul') do set "encoded=%%e"
-                        if not defined encoded set "encoded=!rel!"
-                        curl -sL -o "%%f" "https://github.com/NTNewHorizons/NTNH-Server/raw/main/!encoded!" || echo   FAILED: !rel!
-                    )
-                )
-            )
-        )
+        powershell -NoProfile -Command "Get-ChildItem -Recurse -File | Where-Object FullName -notmatch '\\.git' | ForEach-Object { $f = [System.IO.File]::ReadAllText($_.FullName).Split([char]10)[0].Trim(); if ($f -match 'version https://git-lfs.github.com/spec/v1') { $rel = $_.FullName.Substring((Get-Location).Path.Length + 1); Write-Host ('  Downloading: ' + $rel); $enc = [System.Uri]::EscapeDataString($rel); Invoke-WebRequest -Uri ('https://github.com/NTNewHorizons/NTNH-Server/raw/main/' + $enc) -OutFile $_.FullName -ErrorAction SilentlyContinue; if (-not $?) { Write-Host ('  FAILED: ' + $rel) } } }"
     )
 )
 
