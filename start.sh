@@ -26,12 +26,12 @@ echo "eula=true" > eula.txt
 # Resolve LFS pointers if Git LFS is not available
 if [ -d .git ] && ! git lfs version >/dev/null 2>&1; then
     echo "Resolving LFS pointers (install git-lfs for faster clones)..."
-    find mods -name "HBM-*.jar" -type f | while read -r pointer; do
-        if head -n1 "$pointer" | grep -q "version https://git-lfs.github.com/spec/v1"; then
-            filename=$(basename "$pointer")
-            echo "  Downloading: $filename"
-            encoded=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$filename'))" 2>/dev/null || echo "$filename")
-            curl -sL -o "$pointer" "https://github.com/NTNewHorizons/NTNH-Server/raw/main/mods/$encoded" || echo "  FAILED: $filename"
+    find . -type f -not -path './.git/*' | while read -r pointer; do
+        if head -n1 "$pointer" 2>/dev/null | grep -q "version https://git-lfs.github.com/spec/v1"; then
+            rel="${pointer#./}"
+            echo "  Downloading: $rel"
+            encoded=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$rel'))" 2>/dev/null || echo "$rel")
+            curl -sL -o "$pointer" "https://github.com/NTNewHorizons/NTNH-Server/raw/main/$encoded" || echo "  FAILED: $rel"
         fi
     done
 fi

@@ -8,15 +8,18 @@ Server-side version of the **Nuclear Tech: New Horizons** modpack for Minecraft 
 
 ## Quick Start
 
-**Requirements:** Java 8, 4 GB+ RAM
+**Requirements:** Java 8, Git LFS, 4 GB+ RAM
 
 ```bash
+git lfs install
 git clone https://github.com/NTNewHorizons/NTNH-Server.git
 cd NTNH-Server
 ./start.sh
 ```
 
-That's it. `start.sh` checks Java, accepts the EULA, resolves LFS files, and launches the server.
+That's it. `start.sh` checks Java, accepts the EULA, pulls LFS files, and launches the server.
+
+> If you can't install Git LFS, don't worry — `start.sh` automatically falls back to downloading large files via curl.
 
 ### Updating
 
