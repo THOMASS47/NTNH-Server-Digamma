@@ -27,7 +27,7 @@ That's it. `start.sh` checks Java, accepts the EULA, pulls LFS files, and launch
 git lfs install
 git clone https://github.com/NTNewHorizons/NTNH-Server.git
 cd NTNH-Server
-start.bat
+./start.bat
 ```
 
 \> If you can't install Git LFS, `start.bat` automatically falls back to downloading large files via PowerShell and curl (Windows 7+).
