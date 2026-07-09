@@ -10,6 +10,7 @@ if "%1"=="--update" (
     git fetch origin main
     git reset --hard origin/main
     echo Updated to latest version. Run start.bat to start.
+    pause
     exit /b 0
 )
 
@@ -18,6 +19,7 @@ java -version 2>&1 | findstr "1.8" >nul
 if errorlevel 1 (
     echo ERROR: Java 8 is required.
     java -version 2>&1
+    pause
     exit /b 1
 )
 
@@ -56,3 +58,4 @@ if exist server-args.txt (
 )
 
 java %JVM_OPTS% -jar server.jar nogui
+pause
