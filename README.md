@@ -29,6 +29,27 @@ That's it. `start.sh` checks Java, accepts the EULA, pulls LFS files, and launch
 
 Force-syncs all tracked files to the latest upstream version. Your `world/`, `server.properties`, `ops.json`, `whitelist.json`, `logs/`, and other untracked data are never touched.
 
+### Customizing (Forking)
+
+Want to tweak the modpack for your server — add/remove mods, change configs, edit scripts?
+
+1. **Fork** this repo on GitHub
+2. `git clone https://github.com/YOUR_USER/NTNH-Server.git`
+3. Make your changes, commit, push
+4. Run `./start.sh` on your server
+
+When the upstream NTNH-Server releases an update, sync your fork:
+
+```bash
+git remote add upstream https://github.com/NTNewHorizons/NTNH-Server.git
+git fetch upstream
+git merge upstream/main
+```
+
+Resolve any conflicts (your custom files vs new upstream changes) and push.
+
+> ⚠️ Files under `mods/`, `config/`, `scripts/`, `serverutilities/` are overwritten on each upstream release. If you customize them, expect merge conflicts.
+
 ### Docker
 
 ```bash
