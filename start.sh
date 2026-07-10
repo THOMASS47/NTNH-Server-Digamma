@@ -9,6 +9,7 @@ set -e
 if [ "$1" = "--update" ]; then
     git fetch origin main
     git reset --hard origin/main
+    git lfs pull
     echo "Updated to latest version. Run ./start.sh to start."
     exit 0
 fi
@@ -22,6 +23,9 @@ java -version 2>&1 | grep -q "1.8" || {
 
 # Accept EULA
 echo "eula=true" > eula.txt
+
+# Pull LFS objects (ensures binaries like server.jar are real files, not LFS pointers)
+git lfs pull 2>/dev/null || true
 
 # Resolve LFS pointers if Git LFS is not available
 if [ -d .git ] && ! git lfs version >/dev/null 2>&1; then
