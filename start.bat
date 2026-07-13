@@ -1,12 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
 
-rem Configure stop trigger (used when server shuts down cleanly with exit code 0)
-rem If the server stops cleanly, it will only stop if this string is found in the logs.
-rem Otherwise, it will automatically restart.
-if "%STOP_STRING%"=="" set "STOP_STRING=jarvisqueuearestart"
-if "%LOG_FILE%"=="" set "LOG_FILE=logs\latest.log"
-
 rem NTNH Server — single entry point (Windows)
 rem First run: git clone <url> && start.bat
 rem Update:    start.bat --update
@@ -183,7 +177,6 @@ if not "!filtered_args!"=="" (
     )
 )
 
-:run_loop
 if "%has_jar%"=="1" (
     "%JAVA_EXEC%" %JVM_OPTS% !filtered_args!
 ) else (
@@ -194,40 +187,4 @@ if "%has_jar%"=="1" (
     )
 )
 
-set "exit_code=%errorlevel%"
-echo Server exited with code %exit_code%.
-
-set "should_restart=0"
-if not "%exit_code%"=="0" (
-    echo Server crashed! Restarting...
-    set "should_restart=1"
-) else (
-    if not "%STOP_STRING%"=="" (
-        if exist "%LOG_FILE%" (
-            echo Checking %LOG_FILE% for stop trigger '%STOP_STRING%'...
-            powershell -NoProfile -Command "if (Get-Content -Path '%LOG_FILE%' -Tail 100 -ErrorAction SilentlyContinue | Select-String -Pattern '%STOP_STRING%' -SimpleMatch) { exit 1 } else { exit 0 }"
-            if errorlevel 1 (
-                echo Stop trigger '%STOP_STRING%' found in logs. Exiting cleanly.
-                set "should_restart=0"
-            ) else (
-                echo Stop trigger '%STOP_STRING%' NOT found in logs. Restarting...
-                set "should_restart=1"
-            )
-        ) else (
-            echo STOP_STRING not configured or log file missing. Restarting...
-            set "should_restart=1"
-        )
-    ) else (
-        echo STOP_STRING not configured. Restarting...
-        set "should_restart=1"
-    )
-)
-
-if "%should_restart%"=="1" (
-    echo Restarting in 5 seconds...
-    timeout /t 5 >nul 2>&1
-    goto :run_loop
-) else (
-    echo Clean stop detected. Exiting.
-    exit /b 0
-)
+if "%should_pause%"=="1" pause
