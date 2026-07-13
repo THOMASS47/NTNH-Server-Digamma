@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# Configure restart trigger (used when server shuts down cleanly with exit code 0)
+# If the server stops cleanly, it will only restart if this string is found in the logs.
+# Set RESTART_STRING to "" to disable clean-exit restarts completely.
+RESTART_STRING="${RESTART_STRING:-jarvisqueuearestart}"
+LOG_FILE="${LOG_FILE:-logs/latest.log}"
+
 # NTNH Server — single entry point
 # First run: git clone <url> && ./start.sh
 # Update:    ./start.sh --update
@@ -151,13 +157,59 @@ for arg in "$@"; do
     fi
 done
 
-# 5. Execute java (using exec to replace shell with Java process, keeping same PID for Crafty)
-if [ "$has_jar" = true ]; then
-    exec "$JAVA_EXEC" $JVM_OPTS "$@"
-else
-    if [ $# -eq 0 ]; then
-        exec "$JAVA_EXEC" $JVM_OPTS -jar server.jar nogui
-    else
-        exec "$JAVA_EXEC" $JVM_OPTS -jar server.jar "$@"
+# 5. Execute java in a controlled loop (handling auto-restart, while trapping stop signals)
+JAVA_PID=0
+
+handle_stop() {
+    echo "Stop signal received. Stopping Java server..."
+    if [ $JAVA_PID -ne 0 ]; then
+        kill -TERM "$JAVA_PID" 2>/dev/null || true
+        wait "$JAVA_PID" 2>/dev/null || true
     fi
-fi
+    exit 0
+}
+
+# Trap SIGTERM and SIGINT to stop Java cleanly and exit the loop
+trap handle_stop SIGTERM SIGINT
+
+while true; do
+    if [ "$has_jar" = true ]; then
+        "$JAVA_EXEC" $JVM_OPTS "$@" &
+    else
+        if [ $# -eq 0 ]; then
+            "$JAVA_EXEC" $JVM_OPTS -jar server.jar nogui &
+        else
+            "$JAVA_EXEC" $JVM_OPTS -jar server.jar "$@" &
+        fi
+    fi
+    JAVA_PID=$!
+    
+    # Wait for the Java process to exit
+    wait "$JAVA_PID" 2>/dev/null || true
+    exit_code=$?
+    
+    echo "Server exited with code $exit_code."
+    
+    # Determine if we should restart
+    should_restart=false
+    if [ $exit_code -ne 0 ]; then
+        echo "Server crashed! Restarting..."
+        should_restart=true
+    else
+        # Exit code is 0. Check if restart string is in the logs.
+        if [ -f "$LOG_FILE" ] && [ -n "$RESTART_STRING" ]; then
+            if tail -n 100 "$LOG_FILE" | grep -Fq "$RESTART_STRING"; then
+                echo "Restart string '$RESTART_STRING' found in logs. Restarting..."
+                should_restart=true
+            fi
+        fi
+    fi
+    
+    if [ "$should_restart" = "true" ]; then
+        echo "Restarting in 5 seconds... (Stop the server in Crafty to cancel)"
+        sleep 5
+    else
+        echo "Clean stop detected. Exiting."
+        exit 0
+    fi
+done
