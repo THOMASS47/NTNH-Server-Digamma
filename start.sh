@@ -157,35 +157,17 @@ for arg in "$@"; do
     fi
 done
 
-# 5. Execute java in a controlled loop (handling auto-restart, while trapping stop signals)
-JAVA_PID=0
-
-handle_stop() {
-    echo "Stop signal received. Stopping Java server..."
-    if [ $JAVA_PID -ne 0 ]; then
-        kill -TERM "$JAVA_PID" 2>/dev/null || true
-        wait "$JAVA_PID" 2>/dev/null || true
-    fi
-    exit 0
-}
-
-# Trap SIGTERM and SIGINT to stop Java cleanly and exit the loop
-trap handle_stop SIGTERM SIGINT
-
+# 5. Execute java in a controlled loop (handling auto-restart)
 while true; do
     if [ "$has_jar" = true ]; then
-        "$JAVA_EXEC" $JVM_OPTS "$@" &
+        "$JAVA_EXEC" $JVM_OPTS "$@"
     else
         if [ $# -eq 0 ]; then
-            "$JAVA_EXEC" $JVM_OPTS -jar server.jar nogui &
+            "$JAVA_EXEC" $JVM_OPTS -jar server.jar nogui
         else
-            "$JAVA_EXEC" $JVM_OPTS -jar server.jar "$@" &
+            "$JAVA_EXEC" $JVM_OPTS -jar server.jar "$@"
         fi
     fi
-    JAVA_PID=$!
-    
-    # Wait for the Java process to exit
-    wait "$JAVA_PID" 2>/dev/null || true
     exit_code=$?
     
     echo "Server exited with code $exit_code."
@@ -198,8 +180,9 @@ while true; do
     else
         # Exit code is 0. Check if restart string is in the logs.
         if [ -f "$LOG_FILE" ] && [ -n "$RESTART_STRING" ]; then
+            echo "Checking $LOG_FILE for restart trigger '$RESTART_STRING'..."
             if tail -n 100 "$LOG_FILE" | grep -Fq "$RESTART_STRING"; then
-                echo "Restart string '$RESTART_STRING' found in logs. Restarting..."
+                echo "Restart trigger found in logs! Restarting..."
                 should_restart=true
             fi
         fi

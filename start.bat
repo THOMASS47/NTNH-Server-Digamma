@@ -1,12 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
 
-rem Configure restart trigger (used when server shuts down cleanly with exit code 0)
-rem If the server stops cleanly, it will only restart if this string is found in the logs.
-rem Set RESTART_STRING to "" to disable clean-exit restarts completely.
-if "%RESTART_STRING%"=="" set "RESTART_STRING=Restarting"
-if "%LOG_FILE%"=="" set "LOG_FILE=logs\latest.log"
-
 rem NTNH Server — single entry point (Windows)
 rem First run: git clone <url> && start.bat
 rem Update:    start.bat --update
@@ -183,7 +177,6 @@ if not "!filtered_args!"=="" (
     )
 )
 
-:run_loop
 if "%has_jar%"=="1" (
     "%JAVA_EXEC%" %JVM_OPTS% !filtered_args!
 ) else (
@@ -194,30 +187,4 @@ if "%has_jar%"=="1" (
     )
 )
 
-set "exit_code=%errorlevel%"
-echo Server exited with code %exit_code%.
-
-set "should_restart=0"
-if not "%exit_code%"=="0" (
-    echo Server crashed! Restarting...
-    set "should_restart=1"
-) else (
-    if not "%RESTART_STRING%"=="" (
-        if exist "%LOG_FILE%" (
-            powershell -NoProfile -Command "if (Get-Content -Path '%LOG_FILE%' -Tail 100 -ErrorAction SilentlyContinue | Select-String -Pattern '%RESTART_STRING%' -SimpleMatch) { exit 1 } else { exit 0 }"
-            if errorlevel 1 (
-                echo Restart string '%RESTART_STRING%' found in logs. Restarting...
-                set "should_restart=1"
-            )
-        )
-    )
-)
-
-if "%should_restart%"=="1" (
-    echo Restarting in 5 seconds...
-    timeout /t 5 >nul 2>&1
-    goto :run_loop
-) else (
-    echo Clean stop detected. Exiting.
-    exit /b 0
-)
+if "%should_pause%"=="1" pause
