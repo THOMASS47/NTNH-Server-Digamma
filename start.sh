@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-# Configure restart trigger (used when server shuts down cleanly with exit code 0)
-# If the server stops cleanly, it will only restart if this string is found in the logs.
-# Set RESTART_STRING to "" to disable clean-exit restarts completely.
-RESTART_STRING="${RESTART_STRING:-jarvisqueuearestart}"
+# Configure stop trigger (used when server shuts down cleanly with exit code 0)
+# If the server stops cleanly, it will only stop if this string is found in the logs.
+# Otherwise, it will automatically restart.
+STOP_STRING="${STOP_STRING:-jarvisnukethisshit}"
 LOG_FILE="${LOG_FILE:-logs/latest.log}"
 
 # NTNH Server — single entry point
@@ -178,13 +178,19 @@ while true; do
         echo "Server crashed! Restarting..."
         should_restart=true
     else
-        # Exit code is 0. Check if restart string is in the logs.
-        if [ -f "$LOG_FILE" ] && [ -n "$RESTART_STRING" ]; then
-            echo "Checking $LOG_FILE for restart trigger '$RESTART_STRING'..."
-            if tail -n 100 "$LOG_FILE" | grep -Fq "$RESTART_STRING"; then
-                echo "Restart trigger found in logs! Restarting..."
+        # Exit code is 0. Check if stop string is in the logs.
+        if [ -f "$LOG_FILE" ] && [ -n "$STOP_STRING" ]; then
+            echo "Checking $LOG_FILE for stop trigger '$STOP_STRING'..."
+            if tail -n 100 "$LOG_FILE" | grep -Fq "$STOP_STRING"; then
+                echo "Stop trigger '$STOP_STRING' found in logs. Exiting cleanly."
+                should_restart=false
+            else
+                echo "Stop trigger '$STOP_STRING' NOT found in logs. Restarting..."
                 should_restart=true
             fi
+        else
+            echo "STOP_STRING not configured or log file missing. Restarting..."
+            should_restart=true
         fi
     fi
     
