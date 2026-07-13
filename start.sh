@@ -6,12 +6,28 @@ set -e
 # Update:    ./start.sh --update
 # Normal:    ./start.sh
 
-if [ "$1" = "--update" ]; then
-    git fetch origin main
-    git reset --hard origin/main
+# Filter out --auto-update argument to avoid passing it to Java
+auto_update=false
+new_args=()
+for arg in "$@"; do
+    if [ "$arg" = "--auto-update" ]; then
+        auto_update=true
+    else
+        new_args+=("$arg")
+    fi
+done
+set -- "${new_args[@]}"
+
+# Perform update if requested
+if [ "$auto_update" = "true" ] || [ "$AUTO_UPDATE" = "true" ] || [ "$1" = "--update" ]; then
+    echo "Updating repository..."
+    git fetch origin main 2>/dev/null || true
+    git reset --hard origin/main 2>/dev/null || true
     git lfs pull 2>/dev/null || true
-    echo "Updated to latest version. Run ./start.sh to start."
-    exit 0
+    if [ "$1" = "--update" ]; then
+        echo "Updated to latest version. Run ./start.sh to start."
+        exit 0
+    fi
 fi
 
 # Helper function to check if a file is an LFS pointer

@@ -13,6 +13,31 @@ if not "%PTERODACTYL%"=="" set "should_pause=0"
 if not "%NO_PAUSE%"=="" set "should_pause=0"
 if not "%NON_INTERACTIVE%"=="" set "should_pause=0"
 
+set "auto_update=0"
+if "%AUTO_UPDATE%"=="true" set "auto_update=1"
+
+rem Filter out --auto-update from arguments
+set "filtered_args="
+if not "%~1"=="" (
+    for %%x in (%*) do (
+        if "%%x"=="--auto-update" (
+            set "auto_update=1"
+        ) else (
+            if "!filtered_args!"=="" (
+                set "filtered_args=%%x"
+            ) else (
+                set "filtered_args=!filtered_args! %%x"
+            )
+        )
+    )
+)
+
+if "%auto_update%"=="1" (
+    echo Updating repository...
+    git fetch origin main 2>nul
+    git reset --hard origin/main 2>nul
+)
+
 if "%1"=="--update" (
     git fetch origin main
     git reset --hard origin/main
@@ -20,6 +45,7 @@ if "%1"=="--update" (
     if "%should_pause%"=="1" pause
     exit /b 0
 )
+
 
 rem 1. Determine Java executable path (can be overridden by JAVA_CMD, JAVA_PATH, or JAVA_HOME)
 set "JAVA_EXEC="
@@ -143,21 +169,21 @@ if exist server-args.txt (
     for /f "usebackq delims=" %%A in ("server-args.txt") do set JVM_OPTS=%%A
 )
 
-rem Check if "-jar" is already in the arguments
+rem Check if "-jar" is already in the filtered arguments
 set "has_jar=0"
-if not "%~1"=="" (
-    for %%x in (%*) do (
+if not "!filtered_args!"=="" (
+    for %%x in (!filtered_args!) do (
         if "%%x"=="-jar" set "has_jar=1"
     )
 )
 
 if "%has_jar%"=="1" (
-    "%JAVA_EXEC%" %JVM_OPTS% %*
+    "%JAVA_EXEC%" %JVM_OPTS% !filtered_args!
 ) else (
-    if "%~1"=="" (
+    if "!filtered_args!"=="" (
         "%JAVA_EXEC%" %JVM_OPTS% -jar server.jar nogui
     ) else (
-        "%JAVA_EXEC%" %JVM_OPTS% -jar server.jar %*
+        "%JAVA_EXEC%" %JVM_OPTS% -jar server.jar !filtered_args!
     )
 )
 
