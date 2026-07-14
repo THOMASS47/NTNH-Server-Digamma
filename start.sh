@@ -24,22 +24,73 @@ for arg in "$@"; do
 done
 set -- "${new_args[@]}"
 
-# Perform update if requested
-if [ "$auto_update" = "true" ] || [ "$AUTO_UPDATE" = "true" ] || [ "$1" = "--update" ]; then
-    echo "Updating repository..."
-    git fetch origin main 2>/dev/null || true
-    git reset --hard origin/main 2>/dev/null || true
-    git lfs pull 2>/dev/null || true
-    if [ "$1" = "--update" ]; then
-        echo "Updated to latest version. Run ./start.sh to start."
-        exit 0
-    fi
-fi
-
 # Helper function to check if a file is an LFS pointer
 is_lfs_pointer() {
     [ -f "$1" ] && head -n1 "$1" 2>/dev/null | grep -q "version https://git-lfs.github.com/spec/v1"
 }
+
+# Helper function to resolve LFS pointers using direct download if they are still pointers
+resolve_lfs_pointers() {
+    local need_lfs_resolve=false
+    if is_lfs_pointer "server.jar" || is_lfs_pointer "minecraft_server.1.7.10.jar"; then
+        need_lfs_resolve=true
+    elif [ -d .git ] && ! git lfs version >/dev/null 2>&1; then
+        need_lfs_resolve=true
+    fi
+
+    if [ "$need_lfs_resolve" = true ]; then
+        echo "Resolving Git LFS pointers..."
+        
+        # Determine the raw URL dynamically based on git remote
+        local REPO_RAW_URL="https://github.com/THOMASS47/NTNH-Server-Digamma/raw/main"
+        if [ -d .git ]; then
+            local git_url=$(git remote get-url origin 2>/dev/null || git remote get-url upstream 2>/dev/null || echo "")
+            if [ -n "$git_url" ]; then
+                local clean_url=$(echo "$git_url" | sed -E 's|git@github.com:|https://github.com/|; s|\.git$||')
+                local git_branch=$(git branch --show-current 2>/dev/null || git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+                REPO_RAW_URL="${clean_url}/raw/${git_branch}"
+            fi
+        fi
+        echo "Using source raw URL: $REPO_RAW_URL"
+
+        # Find and download all pointer files
+        find . -type f -not -path './.git/*' | while read -r pointer; do
+            if is_lfs_pointer "$pointer"; then
+                local rel="${pointer#./}"
+                echo "  Downloading: $rel"
+                local encoded=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$rel'))" 2>/dev/null || echo "$rel")
+                curl -sL -o "$pointer" "${REPO_RAW_URL}/${encoded}" || echo "  FAILED: $rel"
+            fi
+        done
+    fi
+}
+
+# Helper function to check and apply updates
+check_and_update() {
+    echo "Checking for repository updates..."
+    git fetch origin main 2>/dev/null || true
+    
+    local HEAD_HASH=$(git rev-parse HEAD 2>/dev/null || echo "1")
+    local REMOTE_HASH=$(git rev-parse origin/main 2>/dev/null || echo "2")
+    
+    if [ "$HEAD_HASH" != "$REMOTE_HASH" ]; then
+        echo "New updates found! Applying updates..."
+        git reset --hard origin/main 2>/dev/null || true
+        git lfs pull 2>/dev/null || true
+        resolve_lfs_pointers
+    else
+        echo "Repository is already up to date."
+    fi
+}
+
+# Perform update if requested
+if [ "$auto_update" = "true" ] || [ "$AUTO_UPDATE" = "true" ] || [ "$1" = "--update" ]; then
+    check_and_update
+    if [ "$1" = "--update" ]; then
+        echo "Update check complete. Run ./start.sh to start."
+        exit 0
+    fi
+fi
 
 # 1. Determine Java executable path (can be overridden by JAVA_CMD, JAVA_PATH, or JAVA_HOME)
 JAVA_EXEC=""
@@ -101,47 +152,12 @@ if [ -z "$JAVA_EXEC" ]; then
     exit 1
 fi
 
-# 2. Accept EULA
-echo "eula=true" > eula.txt
-
 # 3. Pull LFS objects (ensures binaries like server.jar are real files, not LFS pointers)
 if [ -d .git ]; then
     git lfs pull 2>/dev/null || true
 fi
 
-# Resolve LFS pointers using direct download if they are still pointers
-need_lfs_resolve=false
-if is_lfs_pointer "server.jar" || is_lfs_pointer "minecraft_server.1.7.10.jar"; then
-    need_lfs_resolve=true
-elif [ -d .git ] && ! git lfs version >/dev/null 2>&1; then
-    need_lfs_resolve=true
-fi
-
-if [ "$need_lfs_resolve" = true ]; then
-    echo "Resolving Git LFS pointers..."
-    
-    # Determine the raw URL dynamically based on git remote
-    REPO_RAW_URL="https://github.com/THOMASS47/NTNH-Server-Digamma/raw/main"
-    if [ -d .git ]; then
-        git_url=$(git remote get-url origin 2>/dev/null || git remote get-url upstream 2>/dev/null || echo "")
-        if [ -n "$git_url" ]; then
-            clean_url=$(echo "$git_url" | sed -E 's|git@github.com:|https://github.com/|; s|\.git$||')
-            git_branch=$(git branch --show-current 2>/dev/null || git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
-            REPO_RAW_URL="${clean_url}/raw/${git_branch}"
-        fi
-    fi
-    echo "Using source raw URL: $REPO_RAW_URL"
-
-    # Find and download all pointer files
-    find . -type f -not -path './.git/*' | while read -r pointer; do
-        if is_lfs_pointer "$pointer"; then
-            rel="${pointer#./}"
-            echo "  Downloading: $rel"
-            encoded=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$rel'))" 2>/dev/null || echo "$rel")
-            curl -sL -o "$pointer" "${REPO_RAW_URL}/${encoded}" || echo "  FAILED: $rel"
-        fi
-    done
-fi
+resolve_lfs_pointers
 
 # 4. JVM options from server-args.txt (can be overridden via JVM_OPTS env var)
 if [ -f server-args.txt ] && [ -z "${JVM_OPTS+set}" ]; then
@@ -174,12 +190,20 @@ while true; do
     
     # Determine if we should restart
     should_restart=false
+    restart_reason=""
     if [ $exit_code -ne 0 ]; then
         echo "Server crashed! Restarting..."
         should_restart=true
+        restart_reason="crash"
     else
         # Exit code is 0. Check if stop string is in the logs.
-        if [ -f "$LOG_FILE" ] && [ -n "$STOP_STRING" ]; then
+        if [ -z "$STOP_STRING" ]; then
+            echo "STOP_STRING not configured. Exiting cleanly."
+            should_restart=false
+        elif [ ! -f "$LOG_FILE" ]; then
+            echo "Log file missing. Exiting cleanly."
+            should_restart=false
+        else
             echo "Checking $LOG_FILE for stop trigger '$STOP_STRING'..."
             if tail -n 100 "$LOG_FILE" | grep -Fq "$STOP_STRING"; then
                 echo "Stop trigger '$STOP_STRING' found in logs. Exiting cleanly."
@@ -187,16 +211,17 @@ while true; do
             else
                 echo "Stop trigger '$STOP_STRING' NOT found in logs. Restarting..."
                 should_restart=true
+                restart_reason="stop"
             fi
-        else
-            echo "STOP_STRING not configured or log file missing. Restarting..."
-            should_restart=true
         fi
     fi
     
     if [ "$should_restart" = "true" ]; then
         echo "Restarting in 5 seconds... (Stop the server in Crafty to cancel)"
         sleep 5
+        if [ "$restart_reason" = "stop" ] && { [ "$auto_update" = "true" ] || [ "$AUTO_UPDATE" = "true" ]; }; then
+            check_and_update
+        fi
     else
         echo "Clean stop detected. Exiting."
         exit 0
