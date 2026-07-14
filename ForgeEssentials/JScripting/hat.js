@@ -14,7 +14,7 @@ function hatCommandHandler(args) {
     
     var currentItem = inv.getCurrentItem();
     var currentItemIndex = inv.getCurrentItemIndex();
-    var helmetSlot = 39; // Helmet slot index in 1.7.10
+    var helmetSlot = inv.getSize() - 1; // Helmet slot is always the last slot in the inventory
     
     var helmetItem = inv.getStackInSlot(helmetSlot);
     
