@@ -1,0 +1,200 @@
+# --- ModList ---
+# Generated: 27-5-2026 (Server time)
+# Build: 7.5.1
+# Change the location of this file in main.cfg
+
+Minecraft Coder Pack;9.05;http://mcp.ocean-labs.de/
+Forge Mod Loader;7.10.99.99;https://github.com/MinecraftForge/FML/wiki
+Minecraft Forge;10.13.4.1614;http://MinecraftForge.net/forum/index.php/topic,5.0.html
+Applied Energistics 2 Core;rv3-beta-939-GTNH-pre;http://ae2.ae-mod.info
+CodeChicken Core;1.4.12;
+NotEnoughItems;2.8.98-GTNH;https://github.com/GTNewHorizons/NotEnoughItems
+OpenComputers (Core);1.12.41-GTNH-pre;https://oc.cil.li/
+MobiusCore;1.4.6-mapless;profmobius.blogspot.com
+XaeroMinimapCore;1.7.10-1.0;
+XaeroWorldMapCore;1.7.10-1.0;
+GTNHLib Core;0.10.1;
+OpenModsCore;0.10.14;https://openmods.info/
+CoFH ASM;000;
+FoamFixCore;1.0.4;
+Config Checker Mod;1.5.3;https://minecraft.curseforge.com/projects/config-checker/files
+Mycelium;2.3;https://github.com/tesseract4d
+UniMixins;0.3.0;https://github.com/LegacyModdingMC/UniMixins
+UniMixins: Mixin (UniMix);0.3.0;https://github.com/LegacyModdingMC/UniMixins
+UniMixins: Compatibility;0.3.0;https://github.com/LegacyModdingMC/UniMixins
+UniMixins: Mixingasm;0.3;https://github.com/LegacyModdingMC/UniMixins
+UniMixins: SpongeMixins;2.0.1;https://github.com/LegacyModdingMC/UniMixins
+UniMixins: MixinBooterLegacy;1.2.1;https://github.com/LegacyModdingMC/UniMixins
+UniMixins: GTNHMixins;2.2.0;https://github.com/LegacyModdingMC/UniMixins
+UniMixins: MixinExtras;0.3.0;https://github.com/LegacyModdingMC/UniMixins
+ASJCore;1.5.2.2;https://discord.gg/dqQXZHq
+Adventure Backpack;1.4.19-GTNH;https://github.com/runescapejon/AdventureBackpack2/releases
+GTNH Lib;0.10.1;https://github.com/GTNewHorizons/GTNHLib
+Applied Energistics 2;rv3-beta-939-GTNH-pre;https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial
+AE2 Wireless Crafting Terminal;1.12.16;http://p455w0rd.net/
+AE2 Fluid Crafting;1.5.84-gtnh;https://github.com/GlodBlock/AE2FluidCraft-Rework
+BD lib;1.11.0-GTNH;bdew.net/mods/
+AE2 Stuff;0.10.19-GTNH;bdew.net
+AgriCraft;1.7.10-1.5.0;http://minecraft.curseforge.com/mc-mods/225635-agricraft/files
+AI Improvements;0.0.1.8;
+ArchaicFix;0.7.6;
+Angelica;2.1.20;https://github.com/GTNewHorizons/angelica
+Amazing Trophies;1.4.2;
+An Extra Touch;0.0.11;https://github.com/JackOfNoneTrades/AnExtraTouch
+MCPatcherForge;1.0.0-alpha;https://github.com/mist475/MCPatcherForge
+NotFine;2.1.20;https://github.com/jss2a98aj/NotFine
+ArchitectureCraft;1.12.10;http://www.cosc.canterbury.ac.nz/greg.ewing/minecraft/mods/ArchitectureCraft/
+CoFH Core;1.7.10R3.1.4;http://www.teamcofh.com
+AsieLib;0.7.1;
+More Mob Variants;1.0;
+Backhand;1.8.10;https://modrinth.com/mod/backhand
+Baubles;1.0.4;http://www.minecraftforum.net/topic/2535073-baubles
+BetterBuildersWands;0.13.11-GTNH;
+Better Burning;0.4.2;
+BetterCrashes;1.4.1-GTNH;https://github.com/GTNewHorizons/BetterCrashes
+Forgelin;2.0.3-GTNH;https://github.com/shadowfacts/Forgelin
+BetterP2P;1.4.3;https://github.com/LasmGratel/BetterP2P
+Better Ping;1.0;
+BetterQuesting;3.8.53-GTNH-pre;
+Standard Expansion;3.8.53-GTNH-pre;
+BetterQuesting;3.8.53-GTNH-pre;
+Command Blocks for Better Questing;3.8.53-GTNH-pre;
+BiblioCraft;1.11.7;http://www.bibliocraftmod.com
+NTM: Space;1.0.27 BETA (5704);
+BobFluidTranslator;1.1.0;https://modrinth.com/mod/bob-fluid-translator
+Modular UI 2;2.3.64-1.7.10;https://github.com/CleanroomMC/ModularUI/tree/1.7.10
+Gregory Tweaks For Crafting;1.3.12-GTNH-pre;
+Inventory Bogo Sorter;1.3.12-GTNH-pre;
+Mouse Tweaks Unofficial;1.3.12-GTNH-pre;
+Bookshelf;1.0.4.187;http://minecraft.curseforge.com/projects/bookshelf
+Budding Polar;0.1.0;
+§6Village Names§r;@VERSION@;§7https://modrinth.com/mod/village-names§r
+BugTorch;1.2.14;https://github.com/jss2a98aj/BugTorch
+Campfire Backport;1.7.10-1.11.3;https://github.com/connor135246/Campfire-Backport
+Carbon Config Library;1.1.3;https://github.com/Carbon-Config-Project/CarbonConfig
+Carpenter's Blocks;3.7.2-GTNH;https://www.carpentersblocks.com/
+Catalogue;1.0.3-1.7.10;https://github.com/RuiXuqi/Catalogue-Vintage
+Forge Multipart;1.7.6;https://github.com/Chicken-Bones/ForgeMultipart
+Chisel;2.17.26-GTNH;http://www.minecraftforum.net/forums/thread/1294901
+Chunk Pregenerator;4.4.9;
+MrTJPCore;1.3.5;
+ProjectRed Core;4.12.38-GTNH;http://projectredwiki.com
+ProjectRed Transmission;4.12.38-GTNH;
+OpenComputers;1.12.41-GTNH-pre;https://oc.cil.li/
+Waila;2.8.1;
+Computronics;1.9.6-GTNH;
+Controlling;2.1.7;https://minecraft.curseforge.com/projects/controlling
+CoreTweaks;0.3.4.2-GTNH;
+MineTweaker 3;3.1.0;http://minetweaker3.powerofbytes.com
+Custom Ore Generation;1.2.26;http://www.minecraftforum.net/topic/1935710-162forge-custom-ore-generation-first-revival/
+Darkerer;1.1.0;https://github.com/glowredman/Darkerer
+D-Mod;1.0.3.5;
+watermod;1.0;
+EnderCore;1.7.10-0.2.0.40_beta;http://ci.tterrag.com/job/EnderCore
+Ender Zoo;1.3.4;https://www.enderio.com
+YAMCore;0.7.1;
+Enhanced LootBags;1.3.4;https://github.com/GTNewHorizons/EnhancedLootBags
+Hardcore Ender Expansion;1.12.16-GTNH;https://hee.chylex.com
+Et Futurum Requiem;2.6.31-GTNH;https://www.curseforge.com/minecraft/mc-mods/et-futurum-requiem
+Ex Nihilo;1.38-53;http://www.minecraftforum.net/topic/1981778-
+Ex Compressum;1.2.0;
+FalsePatternLib;1.11.0;https://github.com/FalsePattern/FalsePatternLib
+Fast Leaf Decay;1.4;
+FindIt;1.4.2;https://github.com/GTNewHorizons/FindIt
+FoamFix;@VERSION@;https://github.com/asiekierka/FoamFix17
+Forge Essentials;7.5.1;https://github.com/ForgeEssentials/ForgeEssentials
+Forge Microblocks;1.7.6;https://github.com/Chicken-Bones/ForgeMultipart
+Minecraft Multipart Plugin;1.7.6;https://github.com/Chicken-Bones/ForgeMultipart
+ForgeRelocation;0.3.4;
+MCFrames;0.3.4;
+Freecam;1.0.8;https://github.com/SinTh0r4s/MyMod
+iChunUtil;4.2.3;http://www.ichun.us/
+GraviGun;4.0.0-beta;
+HelpFixer;1.3.0;http://minecraft.curseforge.com/mc-mods/223797-helpfixer
+Immersive Cavegen;1.2g-hotfix5;
+Improving Minecraft;1.12.3-MC1.7.10;http://www.minecraftforum.net/topic/2538250-172forge-improving-minecraft-v11/
+LunatriusCore;1.2.1-GTNH;http://mc.lunatri.us/
+InGame Info XML;2.9.0;
+Iron Chests;6.1.13;http://www.minecraftforum.net/topic/981855-
+§cItemPhysic;1.3.0 kotmatross edition;https://github.com/kotmatross28729/ItemPhysic-Legacy-Unofficial
+It's the little things;1.0.4;https://curseforge.com/minecraft/mc-mods/its-the-little-things/files/all?filter-status=1&filter-game-version=1738749986%3A5
+Just Enough Calculation;1.7.10-4.9;http://minecratft.curseforge.com/projects/just-enough-calculation
+LagGoggles;4.17.0;https://github.com/FalsePattern/LagGogglesLegacy
+Mantle;0.5.1;https://github.com/SlimeKnights/Mantle
+Matter Manipulator;0.1.34-GTNH-pre;https://github.com/RecursivePineapple/MatterManipulator
+MineTweakerRecipeMaker;1.0;
+MobsInfo;0.5.10-GTNH;https://github.com/kuba6000/Mobs-Info
+ModernMarkings;0.3.12-1.7.10;https://github.com/GTNewHorizons/ModernMarkings
+Mod Tweaker 2;0.13.0;
+ModularUI;1.3.4;https://github.com/GTNewHorizons/ModularUI
+�9MrCrayfish's Furniture Mod;3.4.7;http://http://www.mrcrayfish.com/furniture.php?p=2
+Nature's Compass;1.5.2-GTNH;https://www.curseforge.com/minecraft/mc-mods/natures-compass
+Navigator;1.1.3;
+NEI Addons;1.18.1;bdew.net/neiaddons
+NEI Addons: Applied Energistics 2;1.18.1;http://bdew.net/neiaddons/
+NEI Addons: Botany;1.18.1;http://bdew.net/neiaddons/
+NEI Addons: Crafting Tables;1.18.1;http://bdew.net/neiaddons/
+NEI Addons: Developer Tools;1.18.1;http://bdew.net/neiaddons/
+NEI Addons: Ex Nihilo;1.18.1;http://bdew.net/neiaddons/
+NEI Addons: Forestry;1.18.1;http://bdew.net/neiaddons/
+NEIIntegration;1.5.0;
+Neodymium Unofficial;0.4.3-unofficial;https://github.com/FalsePattern/Neodymium-Unofficial
+§6Netherlicious;3.2.8;§7https://www.curseforge.com/minecraft/mc-mods/netherlicious
+Nether Portal Fix;1.4.0;https://github.com/GTNewHorizons/NetherPortalFix
+Nilcord;2.4.2.1+1.7.10+forge;https://github.com/unilock/Nilcord
+NoMoreRecipeConflict;1.7.10;http://www.minecraftforum.net/topic/1098727-
+NotEnoughEnergistics;1.7.29;
+Not Enough Resources;0.1.0.ManuallyBuilt;
+OAuth;1.3.3-GTNH;https://github.com/Sintinium/oauth
+OpenMods;0.10.14;https://openmods.info/
+OpenBlocks;1.12.14-GTNH;http://openmods.info/
+OpenFM;0.1.0.45;http://minecraft.curseforge.com/projects/openfm
+OC Glasses;1.6.1-GTNH;http://starchasers.pl/OpenGlasses/
+OpenPrinter;0.3.0-GTNH;
+OpenSecurity;1.2.0-GTNH;
+Opis;1.4.6-mapless;
+OptiCubes;1.7.10-1.0.0;
+Pam's Harvest the Nether;1.7.10;http://minecraft.curseforge.com/members/MatrexsVigil/projects
+Pam's HarvestCraft;1.7.10j;http://minecraft.curseforge.com/members/MatrexsVigil/projects
+Project Blue;1.2.5-GTNH-pre;http://www.cosc.canterbury.ac.nz/greg.ewing/minecraft/mods/ProjectBlue/
+ProjectRed Exploration;4.12.38-GTNH;
+ProjectRed Transportation;4.12.38-GTNH;
+ProjectRed Compatibility;4.12.38-GTNH;
+ProjectRed Expansion;4.12.38-GTNH;
+ProjectRed Integration;4.12.38-GTNH;
+ProjectRed Fabrication;4.12.38-GTNH;
+ProjectRed Illumination;4.12.38-GTNH;
+RandomThings;2.7.1;http://minecraft.curseforge.com/mc-mods/59816-random-things
+Realistic Brewing Stand;1.3.0;https://minecraft.curseforge.com/projects/realistic-brewing-stand
+Re:Chests;1.0.1;https://github.com/Khikki/reChests
+Realistic Terrain Generation;1.1.6-GTNH;https://github.com/GTNewHorizons/Realistic-Terrain-Generation
+Satchels;1.0.7;
+Schematica;1.12.6-GTNH;http://mc.lunatri.us/
+ServerUtilities;2.2.32;https://github.com/GTNewHorizons/ServerUtilities
+Shader Fixer;5.3;https://github.com/kotmatross28729/Shader-fixer
+SignPicture;2.8.0;https://github.com/Team-Fruit/SignPicture/releases
+Simple Ore Scanner;1.0.0;
+SkinPort;1.7.10-v10d;https://github.com/zlainsama/skinport
+Slimevoid Library;2.0.4.7;https://github.com/SlimeVoid/SlimevoidLibrary
+Smart Tree Felling;1.3.0;
+Special AI;1.2.0;http://www.minecraftforum.net/topic/1153874-/
+Stackie;1.6.0.36;http://mc.lunatri.us/
+Storage Drawers;2.2.21-GTNH;http://www.jaquadro.com/
+Storage Drawers: Biomes O' Plenty Pack;2.2.21-GTNH;http://www.jaquadro.com/
+Storage Drawers: Erebus Pack Pack;2.2.21-GTNH;http://www.jaquadro.com/
+Storage Drawers: Forestry Pack;2.2.21-GTNH;http://www.jaquadro.com/
+Storage Drawers: Misc Pack;2.2.21-GTNH;http://www.jaquadro.com/
+Storage Drawers: Natura Pack;2.2.21-GTNH;http://www.jaquadro.com/
+StructureCompat;0.7.4;https://github.com/GTNewHorizons/StructureCompat
+StructureLib;1.4.34;
+TabFaces;1.0.11-rc1;https://github.com/JackOfNoneTrades/TabFaces
+TooManyDanyOres;b1.0-3%;
+TooMuchLoot;4.3.0-GTNH;
+Underp Hangables;1.0.1;http://minecraft.curseforge.com/projects/underp-hangables
+UniLib;1.2.1;https://www.curseforge.com/minecraft/mc-mods/unilib
+vending;1.2.3;
+WDMla;2.8.1;
+WorldEdit;6.1.1-SNAPSHOT;
+Xaero's Minimap;21.10.44;
+Xaero's World Map;1.14.1.33;
+Zora no Densha;1.7.10-1.7.10-0.10.1-snapshot.101;
