@@ -1,3 +1,9 @@
+# NTNH Digamma server repo
+
+Forked the original to be able to edit configs and stuff and auto update and not need to merge stuff for new updates in the vps
+
+# Original README ↓
+
 # NTNH Server
 
 Server-side version of the **Nuclear Tech: New Horizons** modpack for Minecraft 1.7.10.
