@@ -7,6 +7,10 @@ set -e
 STOP_STRING="${STOP_STRING:-jarvisnukethisshit}"
 LOG_FILE="${LOG_FILE:-logs/latest.log}"
 
+# List of users allowed to trigger the stop string
+# e.g., AUTHORIZED_USERS=("THOMASS47" "AnotherUser")
+AUTHORIZED_USERS=("THOMASS47")
+
 # NTNH Server — single entry point
 # First run: git clone <url> && ./start.sh
 # Update:    ./start.sh --update
@@ -205,11 +209,30 @@ while true; do
             should_restart=false
         else
             echo "Checking $LOG_FILE for stop trigger '$STOP_STRING'..."
+            stop_triggered=false
             if tail -n 100 "$LOG_FILE" | grep -Fq "$STOP_STRING"; then
-                echo "Stop trigger '$STOP_STRING' found in logs. Exiting cleanly."
+                # Check if the stop string was said by an authorized user or the server console
+                # Enforce log format to prevent spoofing: ^\[HH:MM:SS\] \[Server thread/INFO\]: <User>  or [Server]
+                for user in "${AUTHORIZED_USERS[@]}"; do
+                    if tail -n 100 "$LOG_FILE" | grep -E "^\[[0-9]{2}:[0-9]{2}:[0-9]{2}\] \[Server thread/INFO\]: <$user> " | grep -Fq "$STOP_STRING"; then
+                        stop_triggered=true
+                        break
+                    fi
+                done
+
+                # Also allow the server itself (e.g., via /say command or console)
+                if [ "$stop_triggered" = false ]; then
+                    if tail -n 100 "$LOG_FILE" | grep -E "^\[[0-9]{2}:[0-9]{2}:[0-9]{2}\] \[Server thread/INFO\]: \[Server\] " | grep -Fq "$STOP_STRING"; then
+                        stop_triggered=true
+                    fi
+                fi
+            fi
+
+            if [ "$stop_triggered" = true ]; then
+                echo "Stop trigger '$STOP_STRING' found in logs from an authorized user. Exiting cleanly."
                 should_restart=false
             else
-                echo "Stop trigger '$STOP_STRING' NOT found in logs. Restarting..."
+                echo "Stop trigger '$STOP_STRING' NOT found in logs from an authorized user. Restarting..."
                 should_restart=true
                 restart_reason="stop"
             fi
