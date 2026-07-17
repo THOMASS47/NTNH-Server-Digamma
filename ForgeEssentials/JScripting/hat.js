@@ -1,35 +1,52 @@
+/**
+ * @typedef {import('./fe.d.ts')} fe
+ * @typedef {import('./mc.d.ts')} mc
+ */
+
+/**
+ * @param {fe.CommandArgs} args
+ */
 function hatCommandHandler(args) {
     if (args.isTabCompletion) {
-        return;
+        args.tabComplete("helmet", "chestplate", "leggings", "boots")
+        return
     }
-    
+
     // Check if the command sender is a player
     if (!args.hasPlayer()) {
-        args.error("Only players can use this command!");
-        return;
+        args.error("Only players can use this command")
+        return
     }
-    
-    var player = args.player;
-    var inv = player.getInventory();
-    
-    var currentItem = inv.getCurrentItem();
-    var currentItemIndex = inv.getCurrentItemIndex();
-    var helmetSlot = inv.getSize() - 1; // Helmet slot is always the last slot in the inventory
-    
-    var helmetItem = inv.getStackInSlot(helmetSlot);
-    
-    if (currentItem == null || currentItem.getItem() == null) {
-        if (helmetItem != null && helmetItem.getItem() != null) {
-            inv.setStackInSlot(currentItemIndex, helmetItem);
-            inv.setStackInSlot(helmetSlot, null);
-            args.confirm("Hat taken off!");
-        } else {
-            args.error("Hold an item in your hand to wear it as a hat!");
-        }
+
+    var inv = args.player.getInventory()
+    var currentItem = inv.getCurrentItem()
+    var currentItemIndex = inv.getCurrentItemIndex()
+
+    var helmetSlot = 40
+    var chestplateSlot = 39
+    var leggingsSlot = 38
+    var bootsSlot = 37
+
+    var armorSlot
+    if (args.isEmpty() || args.get(0) == "helmet") armorSlot = helmetSlot
+    else if (args.get(0) == "chestplate") armorSlot = chestplateSlot
+    else if (args.get(0) == "leggings") armorSlot = leggingsSlot
+    else if (args.get(0) == "boots") armorSlot = bootsSlot
+    var armorItem = inv.getStackInSlot(armorSlot)
+
+    if (currentItem == null) {
+        args.error("Not holding an item")
+        return
+    }
+
+    if (armorItem == null) {
+        inv.setStackInSlot(armorSlot, currentItem)
+        inv.setStackInSlot(currentItemIndex, null)
+        args.confirm(":)")
     } else {
-        inv.setStackInSlot(helmetSlot, currentItem);
-        inv.setStackInSlot(currentItemIndex, helmetItem);
-        args.confirm("Enjoy your new hat!");
+        inv.setStackInSlot(armorSlot, currentItem)
+        inv.setStackInSlot(currentItemIndex, armorItem)
+        args.confirm(":)")
     }
 }
 
@@ -41,4 +58,4 @@ FEServer.registerCommand({
     opOnly: true, // Restricts command to Operators (OPs) by default
     processCommand: hatCommandHandler,
     tabComplete: hatCommandHandler,
-});
+})
