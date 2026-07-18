@@ -19,7 +19,6 @@ function tpxCommandHandler(args) {
         return;
     }
 
-    // Proxy the command to /cofh tpx
     var size = args.size();
     if (size == 0) {
         Server.runCommand(args.sender, 'cofh', 'tpx');
@@ -36,12 +35,12 @@ function tpxCommandHandler(args) {
     }
 }
 
-// Register the command with standard properties matching the wiki guidelines
-FEServer.registerCommand({
+
+/* FEServer.registerCommand({
     name: 'tpx',
     usage: '/tpx [player] {{<playerTo> | <dimension>} | <x> <y> <z> [dimension]}',
     permission: 'fe.commands.tpx',
-    opOnly: true, // Restricts command to Operators (OPs) by default
+    opOnly: true,
     processCommand: tpxCommandHandler,
     tabComplete: tpxCommandHandler,
-});
+}); */
