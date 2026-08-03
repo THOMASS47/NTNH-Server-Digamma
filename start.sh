@@ -106,53 +106,73 @@ elif [ -n "$JAVA_HOME" ] && [ -x "$JAVA_HOME/bin/java" ]; then
     JAVA_EXEC="$JAVA_HOME/bin/java"
 fi
 
+is_java_17_plus() {
+    local j_exec="$1"
+    [ -x "$j_exec" ] || command -v "$j_exec" >/dev/null 2>&1 || return 1
+    local version_str
+    version_str=$("$j_exec" -version 2>&1 | head -n1)
+    local ver
+    ver=$(echo "$version_str" | sed -E 's/.*version "([^"]+)".*/\1/')
+    if [[ "$ver" =~ ^1\. ]]; then
+        ver=$(echo "$ver" | cut -d. -f2)
+    else
+        ver=$(echo "$ver" | cut -d. -f1)
+    fi
+    [ -n "$ver" ] && [ "$ver" -ge 17 ] 2>/dev/null
+}
+
+if [ -n "$JAVA_EXEC" ]; then
+    if ! is_java_17_plus "$JAVA_EXEC"; then
+        JAVA_EXEC=""
+    fi
+fi
+
 # Check default java command if not overridden
 if [ -z "$JAVA_EXEC" ]; then
     if command -v java >/dev/null 2>&1; then
-        if java -version 2>&1 | grep -q "1.8"; then
+        if is_java_17_plus "java"; then
             JAVA_EXEC="java"
         fi
     fi
 fi
 
-# Auto-detect Java 8 in common Linux directories if default java isn't Java 8
+# Auto-detect Java 17/21 in common Linux directories if default java isn't Java 17+
 if [ -z "$JAVA_EXEC" ]; then
     for candidate in \
-        /usr/lib/jvm/java-8-openjdk-amd64/bin/java \
-        /usr/lib/jvm/java-8-openjdk/bin/java \
-        /usr/lib/jvm/java-1.8.0-openjdk/bin/java \
-        /usr/lib/jvm/jre-1.8.0/bin/java \
-        /usr/lib/jvm/java-8-oracle/bin/java \
+        /usr/lib/jvm/java-21-openjdk-amd64/bin/java \
+        /usr/lib/jvm/java-21-openjdk/bin/java \
+        /usr/lib/jvm/java-17-openjdk-amd64/bin/java \
+        /usr/lib/jvm/java-17-openjdk/bin/java \
+        /usr/lib/jvm/java-21-oracle/bin/java \
+        /usr/lib/jvm/java-17-oracle/bin/java \
         /usr/java/latest/bin/java; do
-        if [ -x "$candidate" ] && "$candidate" -version 2>&1 | grep -q "1.8"; then
+        if is_java_17_plus "$candidate"; then
             JAVA_EXEC="$candidate"
-            echo "Auto-detected Java 8 at: $JAVA_EXEC"
+            echo "Auto-detected Java 17+ at: $JAVA_EXEC"
             break
         fi
     done
 fi
 
-# Fallback to searching /usr/lib/jvm/ for any Java 8 installation
+# Fallback to searching /usr/lib/jvm/ for any Java 17+ installation
 if [ -z "$JAVA_EXEC" ]; then
     for jvm_dir in /usr/lib/jvm/*; do
-        if [ -d "$jvm_dir" ] && [ -x "$jvm_dir/bin/java" ]; then
-            if "$jvm_dir/bin/java" -version 2>&1 | grep -q "1.8"; then
-                JAVA_EXEC="$jvm_dir/bin/java"
-                echo "Auto-detected Java 8 at: $JAVA_EXEC"
-                break
-            fi
+        if [ -d "$jvm_dir" ] && is_java_17_plus "$jvm_dir/bin/java"; then
+            JAVA_EXEC="$jvm_dir/bin/java"
+            echo "Auto-detected Java 17+ at: $JAVA_EXEC"
+            break
         fi
     done
 fi
 
-# Error out if Java 8 is not found
+# Error out if Java 17+ is not found
 if [ -z "$JAVA_EXEC" ]; then
-    echo "ERROR: Java 8 is required. None was found."
+    echo "ERROR: Java 17 or higher is required for LWJGL3ify. None was found."
     if command -v java >/dev/null 2>&1; then
         echo "Current system java version:"
         java -version 2>&1 | head -n1
     fi
-    echo "Please set JAVA_CMD, JAVA_PATH, or JAVA_HOME to point to your Java 8 installation."
+    echo "Please set JAVA_CMD, JAVA_PATH, or JAVA_HOME to point to your Java 17+ / 21+ installation."
     exit 1
 fi
 
@@ -180,12 +200,12 @@ done
 # 5. Execute java in a controlled loop (handling auto-restart)
 while true; do
     if [ "$has_jar" = true ]; then
-        "$JAVA_EXEC" $JVM_OPTS "$@"
+        "$JAVA_EXEC" $JVM_OPTS @java9args.txt "$@"
     else
         if [ $# -eq 0 ]; then
-            "$JAVA_EXEC" $JVM_OPTS -jar server.jar nogui
+            "$JAVA_EXEC" $JVM_OPTS @java9args.txt -jar lwjgl3ify-forgePatches.jar nogui
         else
-            "$JAVA_EXEC" $JVM_OPTS -jar server.jar "$@"
+            "$JAVA_EXEC" $JVM_OPTS @java9args.txt -jar lwjgl3ify-forgePatches.jar "$@"
         fi
     fi
     exit_code=$?

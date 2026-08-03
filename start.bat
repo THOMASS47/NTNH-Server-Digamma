@@ -65,7 +65,7 @@ if not "%JAVA_HOME%"=="" (
 )
 
 rem 2. Check default java command in PATH first
-java -version 2>&1 | findstr "1.8" >nul
+powershell -NoProfile -Command "$v=(java -version 2>&1 | Select-String 'version \"(.*?)\"').Matches.Groups[1].Value; $m=if($v.StartsWith('1.')){$v.Split('.')[1]}else{$v.Split('.')[0]}; if([int]$m -ge 17){exit 0}else{exit 1}" >nul 2>&1
 if not errorlevel 1 (
     set "JAVA_EXEC=java"
     goto :java_found
@@ -73,23 +73,28 @@ if not errorlevel 1 (
 
 rem 3. Search paths from 'where java'
 for /f "delims=" %%I in ('where java 2^>nul') do (
-    "%%I" -version 2>&1 | findstr "1.8" >nul
+    powershell -NoProfile -Command "$v=('%%I' -version 2>&1 | Select-String 'version \"(.*?)\"').Matches.Groups[1].Value; $m=if($v.StartsWith('1.')){$v.Split('.')[1]}else{$v.Split('.')[0]}; if([int]$m -ge 17){exit 0}else{exit 1}" >nul 2>&1
     if not errorlevel 1 (
         set "JAVA_EXEC=%%I"
         goto :java_found
     )
 )
 
-rem 4. Auto-detect Java 8 in common directories
+rem 4. Auto-detect Java 17/21 in common directories
 for /d %%D in (
-    "C:\Program Files\Java\jdk1.8.*"
-    "C:\Program Files\Java\jre1.8.*"
-    "C:\Program Files\AdoptOpenJDK\jdk-8.*"
-    "C:\Program Files\Eclipse Adoptium\jdk-8.*"
-    "C:\Program Files (x86)\Java\jre1.8.*"
+    "C:\Program Files\Java\jdk-21*"
+    "C:\Program Files\Java\jdk-17*"
+    "C:\Program Files\Eclipse Adoptium\jdk-21*"
+    "C:\Program Files\Eclipse Adoptium\jdk-17*"
+    "C:\Program Files\AdoptOpenJDK\jdk-21*"
+    "C:\Program Files\AdoptOpenJDK\jdk-17*"
+    "C:\Program Files\Java\jdk17*"
+    "C:\Program Files\Java\jdk21*"
+    "C:\Program Files\Java\jdk-*"
+    "C:\Program Files\Eclipse Adoptium\jdk-*"
 ) do (
     if exist "%%D\bin\java.exe" (
-        "%%D\bin\java.exe" -version 2>&1 | findstr "1.8" >nul
+        powershell -NoProfile -Command "$v=('%%D\bin\java.exe' -version 2>&1 | Select-String 'version \"(.*?)\"').Matches.Groups[1].Value; $m=if($v.StartsWith('1.')){$v.Split('.')[1]}else{$v.Split('.')[0]}; if([int]$m -ge 17){exit 0}else{exit 1}" >nul 2>&1
         if not errorlevel 1 (
             set "JAVA_EXEC=%%D\bin\java.exe"
             goto :java_found
@@ -99,18 +104,18 @@ for /d %%D in (
 
 :check_java
 if not "%JAVA_EXEC%"=="" (
-    "%JAVA_EXEC%" -version 2>&1 | findstr "1.8" >nul
+    powershell -NoProfile -Command "$v=(& '%JAVA_EXEC%' -version 2>&1 | Select-String 'version \"(.*?)\"').Matches.Groups[1].Value; $m=if($v.StartsWith('1.')){$v.Split('.')[1]}else{$v.Split('.')[0]}; if([int]$m -ge 17){exit 0}else{exit 1}" >nul 2>&1
     if not errorlevel 1 goto :java_found
 )
 
-echo ERROR: Java 8 is required. None was found.
+echo ERROR: Java 17 or higher is required for LWJGL3ify. None was found.
 if exist "%JAVA_EXEC%" (
     echo Selected Java version:
     "%JAVA_EXEC%" -version 2>&1
 ) else (
     java -version 2>&1
 )
-echo Please set JAVA_CMD, JAVA_PATH, or JAVA_HOME to point to your Java 8 installation.
+echo Please set JAVA_CMD, JAVA_PATH, or JAVA_HOME to point to your Java 17+ / 21+ installation.
 if "%should_pause%"=="1" pause
 exit /b 1
 
@@ -178,12 +183,12 @@ if not "!filtered_args!"=="" (
 )
 
 if "%has_jar%"=="1" (
-    "%JAVA_EXEC%" %JVM_OPTS% !filtered_args!
+    "%JAVA_EXEC%" %JVM_OPTS% @java9args.txt !filtered_args!
 ) else (
     if "!filtered_args!"=="" (
-        "%JAVA_EXEC%" %JVM_OPTS% -jar server.jar nogui
+        "%JAVA_EXEC%" %JVM_OPTS% @java9args.txt -jar lwjgl3ify-forgePatches.jar nogui
     ) else (
-        "%JAVA_EXEC%" %JVM_OPTS% -jar server.jar !filtered_args!
+        "%JAVA_EXEC%" %JVM_OPTS% @java9args.txt -jar lwjgl3ify-forgePatches.jar !filtered_args!
     )
 )
 

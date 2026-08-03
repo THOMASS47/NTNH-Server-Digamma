@@ -1,4 +1,4 @@
-FROM eclipse-temurin:8-jre
+FROM eclipse-temurin:21-jre
 
 LABEL maintainer="NTNH Team"
 LABEL description="NTNH Modpack Server for Minecraft 1.7.10"
