@@ -14,7 +14,7 @@ Server-side version of the **Nuclear Tech: New Horizons** modpack for Minecraft 
 
 ## Quick Start
 
-**Requirements:** Java 8, Git LFS, 4 GB+ RAM
+**Requirements:** Java 17 or newer, Git LFS, 4 GB+ RAM
 
 ### Linux
 

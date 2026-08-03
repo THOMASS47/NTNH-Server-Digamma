@@ -36,7 +36,8 @@ is_lfs_pointer() {
 # Helper function to resolve LFS pointers using direct download if they are still pointers
 resolve_lfs_pointers() {
     local need_lfs_resolve=false
-    if is_lfs_pointer "server.jar" || is_lfs_pointer "minecraft_server.1.7.10.jar"; then
+    if is_lfs_pointer "forge-1.7.10-10.13.4.1614-1.7.10-universal.jar" || \
+       is_lfs_pointer "minecraft_server.1.7.10.jar"; then
         need_lfs_resolve=true
     elif [ -d .git ] && ! git lfs version >/dev/null 2>&1; then
         need_lfs_resolve=true
@@ -176,7 +177,7 @@ if [ -z "$JAVA_EXEC" ]; then
     exit 1
 fi
 
-# 3. Pull LFS objects (ensures binaries like server.jar are real files, not LFS pointers)
+# 3. Pull LFS objects (ensures the Forge and Minecraft jars are real files, not LFS pointers)
 if [ -d .git ]; then
     git lfs pull 2>/dev/null || true
 fi

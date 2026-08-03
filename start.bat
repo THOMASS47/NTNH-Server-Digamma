@@ -126,8 +126,8 @@ echo eula=true > eula.txt
 rem 5. Resolve LFS pointers using direct download if they are still pointers
 set "need_lfs_resolve=0"
 if not exist .git (
-    rem Check if server.jar is a pointer file
-    powershell -NoProfile -Command "if ((Get-Content -Path 'server.jar' -Head 1 -ErrorAction SilentlyContinue) -like 'version https://git-lfs.github.com/spec/v1*') { exit 1 } else { exit 0 }"
+    rem Check if the Forge universal jar is a pointer file
+    powershell -NoProfile -Command "if ((Get-Content -Path 'forge-1.7.10-10.13.4.1614-1.7.10-universal.jar' -Head 1 -ErrorAction SilentlyContinue) -like 'version https://git-lfs.github.com/spec/v1*') { exit 1 } else { exit 0 }"
     if errorlevel 1 set "need_lfs_resolve=1"
 ) else (
     git lfs version >nul 2>&1
