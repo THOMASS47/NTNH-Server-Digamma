@@ -36,10 +36,18 @@ is_lfs_pointer() {
 # Helper function to resolve LFS pointers using direct download if they are still pointers
 resolve_lfs_pointers() {
     local need_lfs_resolve=false
-    if is_lfs_pointer "forge-1.7.10-10.13.4.1614-1.7.10-universal.jar" || \
-       is_lfs_pointer "minecraft_server.1.7.10.jar"; then
-        need_lfs_resolve=true
-    elif [ -d .git ] && ! git lfs version >/dev/null 2>&1; then
+    local pointer
+    for pointer in \
+        "forge-1.7.10-10.13.4.1614-1.7.10-universal.jar" \
+        "minecraft_server.1.7.10.jar" \
+        mods/HBM-*.jar; do
+        if is_lfs_pointer "$pointer"; then
+            need_lfs_resolve=true
+            break
+        fi
+    done
+
+    if [ -d .git ] && ! git lfs version >/dev/null 2>&1; then
         need_lfs_resolve=true
     fi
 
@@ -58,16 +66,35 @@ resolve_lfs_pointers() {
         fi
         echo "Using source raw URL: $REPO_RAW_URL"
 
-        # Find and download all pointer files
-        find . -type f -not -path './.git/*' | while read -r pointer; do
+        # Download the files that may legitimately be stored in LFS.
+        for pointer in \
+            "forge-1.7.10-10.13.4.1614-1.7.10-universal.jar" \
+            "minecraft_server.1.7.10.jar" \
+            mods/HBM-*.jar; do
             if is_lfs_pointer "$pointer"; then
                 local rel="${pointer#./}"
+                local temp_file="${pointer}.download"
                 echo "  Downloading: $rel"
                 local encoded=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$rel'))" 2>/dev/null || echo "$rel")
-                curl -sL -o "$pointer" "${REPO_RAW_URL}/${encoded}" || echo "  FAILED: $rel"
+                if curl -fL --retry 3 --retry-delay 2 -o "$temp_file" "${REPO_RAW_URL}/${encoded}"; then
+                    mv -f "$temp_file" "$pointer"
+                else
+                    rm -f "$temp_file"
+                    echo "  FAILED: $rel"
+                fi
             fi
         done
     fi
+
+    for pointer in \
+        "forge-1.7.10-10.13.4.1614-1.7.10-universal.jar" \
+        "minecraft_server.1.7.10.jar" \
+        mods/HBM-*.jar; do
+        if is_lfs_pointer "$pointer"; then
+            echo "ERROR: required LFS file is still unresolved: $pointer"
+            return 1
+        fi
+    done
 }
 
 # Helper function to check and apply updates
@@ -177,7 +204,7 @@ if [ -z "$JAVA_EXEC" ]; then
     exit 1
 fi
 
-# 3. Pull LFS objects (ensures the Forge and Minecraft jars are real files, not LFS pointers)
+# 3. Pull LFS objects (currently the HBM jar) when Git LFS is available.
 if [ -d .git ]; then
     git lfs pull 2>/dev/null || true
 fi

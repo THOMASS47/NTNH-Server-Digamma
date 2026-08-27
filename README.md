@@ -1,105 +1,83 @@
-# NTNH Digamma server repo
+# NTNH Digamma server
 
-Forked the original to be able to edit configs and stuff and auto update and not need to merge stuff for new updates in the vps
+Server repository for the Digamma instance of **Nuclear Tech: New Horizons** 2.13.0, a Minecraft 1.7.10 modpack.
 
-# Original README ↓
+This fork tracks [NTNH-Server](https://github.com/NTNewHorizons/NTNH-Server) while retaining Digamma-specific authentication, administration, configuration, launcher, and branding changes.
 
-# NTNH Server
+> Upstream regenerates `mods/`, `config/`, `scripts/`, and `serverutilities/` for each release. Merge upstream releases into this repository and test them before deploying; do not replace those directories directly on a live Digamma server.
 
-Server-side version of the **Nuclear Tech: New Horizons** modpack for Minecraft 1.7.10.
+## Requirements
 
-> ⚠️ This repository is **auto-generated** from the [client repo](https://github.com/NTNewHorizons/NTNH). Files in `mods/`, `config/`, `scripts/`, `serverutilities/` are overwritten on each release.
+- Java 17 or newer (Java 21 is supported)
+- Git and Git LFS
+- At least 10 GB of memory available for the configured JVM heap
 
----
+Java 17+ is required by this fork's LWJGL3ify launch path even though the stock upstream server uses Java 8.
 
-## Quick Start
-
-**Requirements:** Java 17 or newer, Git LFS, 4 GB+ RAM
+## Install
 
 ### Linux
 
 ```bash
 git lfs install
-git clone https://github.com/NTNewHorizons/NTNH-Server.git
-cd NTNH-Server
+git clone https://github.com/THOMASS47/NTNH-Server-Digamma.git
+cd NTNH-Server-Digamma
 ./start.sh
 ```
-
-That's it. `start.sh` checks Java, accepts the EULA, pulls LFS files, and launches the server.
 
 ### Windows
 
 ```batch
 git lfs install
-git clone https://github.com/NTNewHorizons/NTNH-Server.git
-cd NTNH-Server
-./start.bat
+git clone https://github.com/THOMASS47/NTNH-Server-Digamma.git
+cd NTNH-Server-Digamma
+start.bat
 ```
 
-\> If you can't install Git LFS, `start.bat` automatically falls back to downloading large files via PowerShell and curl (Windows 7+).
+The launchers locate Java 17+, resolve required LFS objects, read JVM options from `server-args.txt`, and start Forge through LWJGL3ify.
 
-### Java Arguments
+## Updating a deployed server
 
-JVM options are read from `server-args.txt` (edit this file to change memory allocation or GC settings). To override for a single launch, set the `JVM_OPTS` environment variable:
-
-```bash
-JVM_OPTS="-Xms2G -Xmx4G" ./start.sh
-```
-
-> If you can't install Git LFS, don't worry - `start.sh` automatically falls back to downloading large files via curl.
-
-### Updating
+The deployed server should track this fork's `main` branch, not the upstream distribution archive.
 
 ```bash
 ./start.sh --update
 ```
 
-Force-syncs all tracked files to the latest upstream version. Your `world/`, `server.properties`, `ops.json`, `whitelist.json`, `logs/`, and other untracked data are never touched.
+The Digamma launcher fetches and applies `origin/main`. Automatic update checks can be enabled with `--auto-update` or `AUTO_UPDATE=true`.
 
-### Customizing (Forking)
+Do not use the stock NTNH release updater on a Digamma instance. It replaces modpack directories wholesale and would remove the fork's custom mods and configuration.
 
-Want to tweak the modpack for your server - add/remove mods, change configs, edit scripts?
+## Java arguments
 
-1. **Fork** this repo on GitHub
-2. `git clone https://github.com/YOUR_USER/NTNH-Server.git`
-3. Make your changes, commit, push
-4. Run `./start.sh` on your server
-
-When the upstream NTNH-Server releases an update, sync your fork:
+JVM options are read from `server-args.txt`. To override them for one launch:
 
 ```bash
-git remote add upstream https://github.com/NTNewHorizons/NTNH-Server.git
-git fetch upstream
-git merge upstream/main
+JVM_OPTS="-Xms10G -Xmx10G" ./start.sh
 ```
 
-Resolve any conflicts (your custom files vs new upstream changes) and push.
+Java can be selected with `JAVA_CMD`, `JAVA_PATH`, or `JAVA_HOME`.
 
-> ⚠️ Files under `mods/`, `config/`, `scripts/`, `serverutilities/` are overwritten on each upstream release. If you customize them, expect merge conflicts.
-
-### Docker
+## Docker
 
 ```bash
 cd docker
 docker compose up -d
 ```
 
----
+The Docker image uses Java 21 and persists the world, backups, logs, and crash reports through volumes.
 
-## How It Works
+## Synchronizing upstream
 
-The server pack is generated from the client repo on each release. A GitHub Action strips client-only mods and publishes the result here.
+```bash
+git fetch upstream
+git switch -c merge/upstream-<version>
+GIT_LFS_SKIP_SMUDGE=1 git merge --no-commit --no-ff upstream/main
+```
 
-Files you can edit freely (never overwritten):
-- `server.properties`, `ops.json`, `whitelist.json`, `banned-*.json`
-- `world/`, `logs/`, `crash-reports/`, `backups/`
-
-Files reset on update:
-- `mods/`, `config/`, `scripts/`, `serverutilities/`
-- `README.md`, `knownkeys.txt`, `localconfig.cfg`
-
----
+Resolve conflicts by keeping the new upstream modpack payload and reapplying Digamma-specific launch, authentication, ForgeEssentials, server utility, and branding policies. Validate on a staging server before merging to `main`.
 
 ## Support
 
-[Bugs & mod issues](https://github.com/NTNewHorizons/NTNH/issues) · [Server issues](https://github.com/NTNewHorizons/NTNH-Server/issues)
+- [NTNH modpack issues](https://github.com/NTNewHorizons/NTNH/issues)
+- [Upstream server issues](https://github.com/NTNewHorizons/NTNH-Server/issues)
