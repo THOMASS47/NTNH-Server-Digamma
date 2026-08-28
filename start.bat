@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+set "GIT_LFS_SKIP_SMUDGE=1"
 
 rem NTNH Server — single entry point (Windows)
 rem First run: git clone <url> && start.bat
@@ -41,6 +42,11 @@ if "%auto_update%"=="1" (
 if "%1"=="--update" (
     git fetch origin main
     git reset --hard origin/main
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0resolve-release.ps1"
+    if errorlevel 1 (
+        if "%should_pause%"=="1" pause
+        exit /b 1
+    )
     echo Updated to latest version. Run start.bat to start.
     if "%should_pause%"=="1" pause
     exit /b 0
@@ -123,58 +129,8 @@ exit /b 1
 rem Accept EULA
 echo eula=true > eula.txt
 
-rem 5. Resolve LFS pointers using direct download if they are still pointers
-set "need_lfs_resolve=0"
-if not exist .git (
-    rem Check legacy launch jars and the current HBM jar.
-    powershell -NoProfile -Command "if ((Get-Content -Path 'forge-1.7.10-10.13.4.1614-1.7.10-universal.jar' -Head 1 -ErrorAction SilentlyContinue) -like 'version https://git-lfs.github.com/spec/v1*') { exit 1 } else { exit 0 }"
-    if errorlevel 1 set "need_lfs_resolve=1"
-    powershell -NoProfile -Command "$p=Get-ChildItem -Path 'mods\HBM-*.jar' -ErrorAction SilentlyContinue | Where-Object { (Get-Content -LiteralPath $_.FullName -TotalCount 1 -ErrorAction SilentlyContinue) -like 'version https://git-lfs.github.com/spec/v1*' }; if ($p) { exit 1 } else { exit 0 }"
-    if errorlevel 1 set "need_lfs_resolve=1"
-) else (
-    git lfs version >nul 2>&1
-    if errorlevel 1 (
-        set "need_lfs_resolve=1"
-    ) else (
-        git lfs pull >nul 2>&1
-        if errorlevel 1 set "need_lfs_resolve=1"
-    )
-)
-
-if "%need_lfs_resolve%"=="1" (
-    echo Resolving Git LFS pointers...
-    powershell -NoProfile -Command ^
-      "$repo_url = 'https://github.com/THOMASS47/NTNH-Server-Digamma/raw/main'; ^
-       if (Test-Path .git) { ^
-           $git_url = (git remote get-url origin 2>$null); ^
-           if ($git_url) { ^
-               $clean_url = $git_url -replace 'git@github.com:', 'https://github.com/' -replace '\.git$', ''; ^
-               $git_branch = (git branch --show-current 2>$null); ^
-               if (-not $git_branch) { $git_branch = (git rev-parse --abbrev-ref HEAD 2>$null) }; ^
-               if (-not $git_branch) { $git_branch = 'main' }; ^
-               $repo_url = \"${clean_url}/raw/${git_branch}\" ^
-           } ^
-       }; ^
-       Write-Host \"Using source raw URL: $repo_url\"; ^
-       Get-ChildItem -Recurse -File | Where-Object { $_.FullName -notmatch '\\.git' } | ForEach-Object { ^
-           $first_line = Get-Content -LiteralPath $_.FullName -TotalCount 1 -ErrorAction SilentlyContinue; ^
-           if ($first_line -match 'version https://git-lfs.github.com/spec/v1') { ^
-               $rel = $_.FullName.Substring((Get-Location).Path.Length + 1); ^
-               Write-Host ('  Downloading: ' + $rel); ^
-               $enc = (($rel -split '[\\/]') | ForEach-Object { [System.Uri]::EscapeDataString($_) }) -join '/'; ^
-               $temp = $_.FullName + '.download'; ^
-               try { ^
-                   Invoke-WebRequest -Uri ($repo_url + '/' + $enc) -OutFile $temp -ErrorAction Stop; ^
-                   Move-Item -LiteralPath $temp -Destination $_.FullName -Force ^
-               } catch { ^
-                   Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue; ^
-                   Write-Host ('  FAILED: ' + $rel) ^
-               } ^
-           } ^
-       }"
-)
-
-powershell -NoProfile -Command "$files=@('forge-1.7.10-10.13.4.1614-1.7.10-universal.jar','minecraft_server.1.7.10.jar') + @(Get-ChildItem -Path 'mods\HBM-*.jar' -ErrorAction SilentlyContinue | ForEach-Object FullName); $p=$files | Where-Object { Test-Path -LiteralPath $_ } | Where-Object { (Get-Content -LiteralPath $_ -TotalCount 1 -ErrorAction SilentlyContinue) -like 'version https://git-lfs.github.com/spec/v1*' }; if ($p) { $p | ForEach-Object { Write-Host ('ERROR: required LFS file is still unresolved: ' + $_) }; exit 1 }"
+rem 5. Materialize large-file pointers from the checksum-verified NTNH release.
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0resolve-release.ps1"
 if errorlevel 1 (
     if "%should_pause%"=="1" pause
     exit /b 1

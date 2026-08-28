@@ -29,8 +29,7 @@ playerdata/
 stats/
 data/
 
-# Installed-server version marker (written by install.sh / update.sh)
-.ntnh-version
+# Digamma tracks .ntnh-version so pointer resolution selects the matching pack.
 
 # OS artifacts
 .DS_Store

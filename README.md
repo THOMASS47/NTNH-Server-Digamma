@@ -9,7 +9,8 @@ This fork tracks [NTNH-Server](https://github.com/NTNewHorizons/NTNH-Server) whi
 ## Requirements
 
 - Java 17 or newer (Java 21 is supported)
-- Git and Git LFS
+- Git
+- Linux: `curl` and `unzip`; Windows: PowerShell 5.1+
 - At least 10 GB of memory available for the configured JVM heap
 
 Java 17+ is required by this fork's LWJGL3ify launch path even though the stock upstream server uses Java 8.
@@ -19,7 +20,6 @@ Java 17+ is required by this fork's LWJGL3ify launch path even though the stock 
 ### Linux
 
 ```bash
-git lfs install
 git clone https://github.com/THOMASS47/NTNH-Server-Digamma.git
 cd NTNH-Server-Digamma
 ./start.sh
@@ -28,13 +28,12 @@ cd NTNH-Server-Digamma
 ### Windows
 
 ```batch
-git lfs install
 git clone https://github.com/THOMASS47/NTNH-Server-Digamma.git
 cd NTNH-Server-Digamma
 start.bat
 ```
 
-The launchers locate Java 17+, resolve required LFS objects, read JVM options from `server-args.txt`, and start Forge through LWJGL3ify.
+Git LFS is not required. The HBM jar is too large for normal Git storage, so when the checkout contains its pointer, the launcher downloads the matching checksum-verified upstream release archive and extracts the real jar. The launchers then locate Java 17+, read JVM options from `server-args.txt`, and start Forge through LWJGL3ify.
 
 ## Updating a deployed server
 
