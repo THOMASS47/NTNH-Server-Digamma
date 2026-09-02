@@ -33,41 +33,19 @@ is_lfs_pointer() {
     [ -f "$1" ] && head -n1 "$1" 2>/dev/null | grep -q "version https://git-lfs.github.com/spec/v1"
 }
 
-# Helper function to resolve LFS pointers using direct download if they are still pointers
+# Materialize any large-file pointers without requiring Git LFS.
 resolve_lfs_pointers() {
-    local need_lfs_resolve=false
-    if is_lfs_pointer "forge-1.7.10-10.13.4.1614-1.7.10-universal.jar" || \
-       is_lfs_pointer "minecraft_server.1.7.10.jar"; then
-        need_lfs_resolve=true
-    elif [ -d .git ] && ! git lfs version >/dev/null 2>&1; then
-        need_lfs_resolve=true
-    fi
-
-    if [ "$need_lfs_resolve" = true ]; then
-        echo "Resolving Git LFS pointers..."
-        
-        # Determine the raw URL dynamically based on git remote
-        local REPO_RAW_URL="https://github.com/THOMASS47/NTNH-Server-Digamma/raw/main"
-        if [ -d .git ]; then
-            local git_url=$(git remote get-url origin 2>/dev/null || git remote get-url upstream 2>/dev/null || echo "")
-            if [ -n "$git_url" ]; then
-                local clean_url=$(echo "$git_url" | sed -E 's|git@github.com:|https://github.com/|; s|\.git$||')
-                local git_branch=$(git branch --show-current 2>/dev/null || git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
-                REPO_RAW_URL="${clean_url}/raw/${git_branch}"
-            fi
+    local pointer
+    for pointer in \
+        "forge-1.7.10-10.13.4.1614-1.7.10-universal.jar" \
+        "minecraft_server.1.7.10.jar" \
+        mods/HBM-*.jar; do
+        if is_lfs_pointer "$pointer"; then
+            echo "Resolving large-file pointers from the NTNH release archive..."
+            ./resolve-release.sh
+            return
         fi
-        echo "Using source raw URL: $REPO_RAW_URL"
-
-        # Find and download all pointer files
-        find . -type f -not -path './.git/*' | while read -r pointer; do
-            if is_lfs_pointer "$pointer"; then
-                local rel="${pointer#./}"
-                echo "  Downloading: $rel"
-                local encoded=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$rel'))" 2>/dev/null || echo "$rel")
-                curl -sL -o "$pointer" "${REPO_RAW_URL}/${encoded}" || echo "  FAILED: $rel"
-            fi
-        done
-    fi
+    done
 }
 
 # Helper function to check and apply updates
@@ -80,8 +58,7 @@ check_and_update() {
     
     if [ "$HEAD_HASH" != "$REMOTE_HASH" ]; then
         echo "New updates found! Applying updates..."
-        git reset --hard origin/main 2>/dev/null || true
-        git lfs pull 2>/dev/null || true
+        GIT_LFS_SKIP_SMUDGE=1 git reset --hard origin/main 2>/dev/null || true
         resolve_lfs_pointers
     else
         echo "Repository is already up to date."
@@ -177,11 +154,7 @@ if [ -z "$JAVA_EXEC" ]; then
     exit 1
 fi
 
-# 3. Pull LFS objects (ensures the Forge and Minecraft jars are real files, not LFS pointers)
-if [ -d .git ]; then
-    git lfs pull 2>/dev/null || true
-fi
-
+# 3. Materialize large files from the matching release when necessary.
 resolve_lfs_pointers
 
 # 4. JVM options from server-args.txt (can be overridden via JVM_OPTS env var)

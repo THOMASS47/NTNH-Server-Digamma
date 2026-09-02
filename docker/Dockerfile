@@ -3,13 +3,15 @@ FROM eclipse-temurin:21-jre
 LABEL maintainer="NTNH Team"
 LABEL description="NTNH Modpack Server for Minecraft 1.7.10"
 
-RUN apt-get update && apt-get install -y wget unzip && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates curl git python3 unzip wget \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /server
 
-RUN wget -q https://github.com/NTNewHorizons/NTNH-Server/archive/refs/heads/main.zip -O /tmp/ntnh.zip && \
+RUN wget -q https://github.com/THOMASS47/NTNH-Server-Digamma/archive/refs/heads/main.zip -O /tmp/ntnh.zip && \
     unzip -q /tmp/ntnh.zip -d /tmp/ && \
-    cp -r /tmp/NTNH-Server-main/* /server/ && \
+    cp -r /tmp/NTNH-Server-Digamma-main/* /server/ && \
     rm -rf /tmp/*
 
 RUN mkdir -p /server/world /server/backups /server/logs /server/crash-reports
@@ -20,7 +22,7 @@ EXPOSE 25565/udp
 VOLUME ["/server/world", "/server/backups", "/server/logs", "/server/crash-reports"]
 
 ENV EULA="false"
-ENV JVM_OPTS="-Xms4G -Xmx8G -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=100"
+ENV JVM_OPTS="-Xms10G -Xmx10G -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=100"
 
 COPY --chmod=755 <<'EOF' /server/docker-entrypoint.sh
 #!/bin/bash
