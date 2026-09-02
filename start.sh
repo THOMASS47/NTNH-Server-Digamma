@@ -33,16 +33,15 @@ is_lfs_pointer() {
     [ -f "$1" ] && head -n1 "$1" 2>/dev/null | grep -q "version https://git-lfs.github.com/spec/v1"
 }
 
-# Materialize any large-file pointers without requiring Git LFS.
-resolve_lfs_pointers() {
+# Download any large-file pointers without requiring Git LFS.
+download_lfs_files() {
     local pointer
     for pointer in \
         "forge-1.7.10-10.13.4.1614-1.7.10-universal.jar" \
         "minecraft_server.1.7.10.jar" \
         mods/HBM-*.jar; do
         if is_lfs_pointer "$pointer"; then
-            echo "Resolving large-file pointers from the NTNH release archive..."
-            ./resolve-release.sh
+            bash ./download-files.sh
             return
         fi
     done
@@ -59,7 +58,7 @@ check_and_update() {
     if [ "$HEAD_HASH" != "$REMOTE_HASH" ]; then
         echo "New updates found! Applying updates..."
         GIT_LFS_SKIP_SMUDGE=1 git reset --hard origin/main 2>/dev/null || true
-        resolve_lfs_pointers
+        download_lfs_files
     else
         echo "Repository is already up to date."
     fi
@@ -74,90 +73,54 @@ if [ "$auto_update" = "true" ] || [ "$AUTO_UPDATE" = "true" ] || [ "$1" = "--upd
     fi
 fi
 
-# 1. Determine Java executable path (can be overridden by JAVA_CMD, JAVA_PATH, or JAVA_HOME)
-JAVA_EXEC=""
-if [ -n "$JAVA_CMD" ]; then
-    JAVA_EXEC="$JAVA_CMD"
-elif [ -n "$JAVA_PATH" ]; then
-    JAVA_EXEC="$JAVA_PATH"
-elif [ -n "$JAVA_HOME" ] && [ -x "$JAVA_HOME/bin/java" ]; then
-    JAVA_EXEC="$JAVA_HOME/bin/java"
-fi
-
+# Find the first Java 17+ override or PATH entry.
 is_java_17_plus() {
-    local j_exec="$1"
-    [ -x "$j_exec" ] || command -v "$j_exec" >/dev/null 2>&1 || return 1
-    local version_str
-    version_str=$("$j_exec" -version 2>&1 | head -n1)
-    local ver
-    ver=$(echo "$version_str" | sed -E 's/.*version "([^"]+)".*/\1/')
-    if [[ "$ver" =~ ^1\. ]]; then
-        ver=$(echo "$ver" | cut -d. -f2)
-    else
-        ver=$(echo "$ver" | cut -d. -f1)
+    local java="$1" version major
+    [ -x "$java" ] || command -v "$java" >/dev/null 2>&1 || return 1
+    version=$("$java" -version 2>&1 | head -n1)
+    version="${version#*\"}"
+    version="${version%%\"*}"
+    major="${version%%.*}"
+    if [ "$major" = "1" ]; then
+        version="${version#*.}"
+        major="${version%%.*}"
     fi
-    [ -n "$ver" ] && [ "$ver" -ge 17 ] 2>/dev/null
+    case "$major" in
+        ''|*[!0-9]*) return 1 ;;
+    esac
+    [ "$major" -ge 17 ]
 }
 
-if [ -n "$JAVA_EXEC" ]; then
-    if ! is_java_17_plus "$JAVA_EXEC"; then
-        JAVA_EXEC=""
+JAVA_EXEC=""
+for candidate in \
+    "${JAVA_CMD:-}" \
+    "${JAVA_PATH:-}" \
+    "${JAVA_HOME:+$JAVA_HOME/bin/java}"; do
+    if [ -n "$candidate" ] && is_java_17_plus "$candidate"; then
+        JAVA_EXEC="$candidate"
+        break
     fi
-fi
+done
 
-# Check default java command if not overridden
 if [ -z "$JAVA_EXEC" ]; then
-    if command -v java >/dev/null 2>&1; then
-        if is_java_17_plus "java"; then
-            JAVA_EXEC="java"
-        fi
-    fi
-fi
-
-# Auto-detect Java 17/21 in common Linux directories if default java isn't Java 17+
-if [ -z "$JAVA_EXEC" ]; then
-    for candidate in \
-        /usr/lib/jvm/java-21-openjdk-amd64/bin/java \
-        /usr/lib/jvm/java-21-openjdk/bin/java \
-        /usr/lib/jvm/java-17-openjdk-amd64/bin/java \
-        /usr/lib/jvm/java-17-openjdk/bin/java \
-        /usr/lib/jvm/java-21-oracle/bin/java \
-        /usr/lib/jvm/java-17-oracle/bin/java \
-        /usr/java/latest/bin/java; do
+    while IFS= read -r candidate; do
         if is_java_17_plus "$candidate"; then
             JAVA_EXEC="$candidate"
-            echo "Auto-detected Java 17+ at: $JAVA_EXEC"
             break
         fi
-    done
+    done < <(type -aP java 2>/dev/null)
 fi
 
-# Fallback to searching /usr/lib/jvm/ for any Java 17+ installation
-if [ -z "$JAVA_EXEC" ]; then
-    for jvm_dir in /usr/lib/jvm/*; do
-        if [ -d "$jvm_dir" ] && is_java_17_plus "$jvm_dir/bin/java"; then
-            JAVA_EXEC="$jvm_dir/bin/java"
-            echo "Auto-detected Java 17+ at: $JAVA_EXEC"
-            break
-        fi
-    done
-fi
-
-# Error out if Java 17+ is not found
 if [ -z "$JAVA_EXEC" ]; then
     echo "ERROR: Java 17 or higher is required for LWJGL3ify. None was found."
-    if command -v java >/dev/null 2>&1; then
-        echo "Current system java version:"
-        java -version 2>&1 | head -n1
-    fi
-    echo "Please set JAVA_CMD, JAVA_PATH, or JAVA_HOME to point to your Java 17+ / 21+ installation."
+    echo "Add Java 17+ to PATH or set JAVA_CMD, JAVA_PATH, or JAVA_HOME."
     exit 1
 fi
 
-# 3. Materialize large files from the matching release when necessary.
-resolve_lfs_pointers
+# Download large files from their upstream sources when necessary.
+download_lfs_files
 
-# 4. JVM options from server-args.txt (can be overridden via JVM_OPTS env var)
+# JVM options from server-args.txt (can be overridden via JVM_OPTS env var)
 if [ -f server-args.txt ] && [ -z "${JVM_OPTS+set}" ]; then
     JVM_OPTS=$(tr '\n' ' ' < server-args.txt)
 fi

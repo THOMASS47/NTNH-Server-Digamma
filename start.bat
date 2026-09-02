@@ -42,7 +42,7 @@ if "%auto_update%"=="1" (
 if "%1"=="--update" (
     git fetch origin main
     git reset --hard origin/main
-    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0resolve-release.ps1"
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0download-files.ps1"
     if errorlevel 1 (
         if "%should_pause%"=="1" pause
         exit /b 1
@@ -53,84 +53,37 @@ if "%1"=="--update" (
 )
 
 
-rem 1. Determine Java executable path (can be overridden by JAVA_CMD, JAVA_PATH, or JAVA_HOME)
+rem Find the first Java 17+ override or PATH entry.
 set "JAVA_EXEC="
-if not "%JAVA_CMD%"=="" (
-    set "JAVA_EXEC=%JAVA_CMD%"
-    goto :check_java
-)
-if not "%JAVA_PATH%"=="" (
-    set "JAVA_EXEC=%JAVA_PATH%"
-    goto :check_java
-)
-if not "%JAVA_HOME%"=="" (
-    if exist "%JAVA_HOME%\bin\java.exe" (
-        set "JAVA_EXEC=%JAVA_HOME%\bin\java.exe"
-        goto :check_java
-    )
-)
+if defined JAVA_CMD call :try_java "%JAVA_CMD%"
+if defined JAVA_EXEC goto :java_found
+if defined JAVA_PATH call :try_java "%JAVA_PATH%"
+if defined JAVA_EXEC goto :java_found
+if defined JAVA_HOME call :try_java "%JAVA_HOME%\bin\java.exe"
+if defined JAVA_EXEC goto :java_found
 
-rem 2. Check default java command in PATH first
-powershell -NoProfile -Command "$v=(java -version 2>&1 | Select-String 'version \"(.*?)\"').Matches.Groups[1].Value; $m=if($v.StartsWith('1.')){$v.Split('.')[1]}else{$v.Split('.')[0]}; if([int]$m -ge 17){exit 0}else{exit 1}" >nul 2>&1
-if not errorlevel 1 (
-    set "JAVA_EXEC=java"
-    goto :java_found
-)
-
-rem 3. Search paths from 'where java'
 for /f "delims=" %%I in ('where java 2^>nul') do (
-    powershell -NoProfile -Command "$v=('%%I' -version 2>&1 | Select-String 'version \"(.*?)\"').Matches.Groups[1].Value; $m=if($v.StartsWith('1.')){$v.Split('.')[1]}else{$v.Split('.')[0]}; if([int]$m -ge 17){exit 0}else{exit 1}" >nul 2>&1
-    if not errorlevel 1 (
-        set "JAVA_EXEC=%%I"
-        goto :java_found
-    )
+    if not defined JAVA_EXEC call :try_java "%%I"
 )
-
-rem 4. Auto-detect Java 17/21 in common directories
-for /d %%D in (
-    "C:\Program Files\Java\jdk-21*"
-    "C:\Program Files\Java\jdk-17*"
-    "C:\Program Files\Eclipse Adoptium\jdk-21*"
-    "C:\Program Files\Eclipse Adoptium\jdk-17*"
-    "C:\Program Files\AdoptOpenJDK\jdk-21*"
-    "C:\Program Files\AdoptOpenJDK\jdk-17*"
-    "C:\Program Files\Java\jdk17*"
-    "C:\Program Files\Java\jdk21*"
-    "C:\Program Files\Java\jdk-*"
-    "C:\Program Files\Eclipse Adoptium\jdk-*"
-) do (
-    if exist "%%D\bin\java.exe" (
-        powershell -NoProfile -Command "$v=('%%D\bin\java.exe' -version 2>&1 | Select-String 'version \"(.*?)\"').Matches.Groups[1].Value; $m=if($v.StartsWith('1.')){$v.Split('.')[1]}else{$v.Split('.')[0]}; if([int]$m -ge 17){exit 0}else{exit 1}" >nul 2>&1
-        if not errorlevel 1 (
-            set "JAVA_EXEC=%%D\bin\java.exe"
-            goto :java_found
-        )
-    )
-)
-
-:check_java
-if not "%JAVA_EXEC%"=="" (
-    powershell -NoProfile -Command "$v=(& '%JAVA_EXEC%' -version 2>&1 | Select-String 'version \"(.*?)\"').Matches.Groups[1].Value; $m=if($v.StartsWith('1.')){$v.Split('.')[1]}else{$v.Split('.')[0]}; if([int]$m -ge 17){exit 0}else{exit 1}" >nul 2>&1
-    if not errorlevel 1 goto :java_found
-)
+if defined JAVA_EXEC goto :java_found
 
 echo ERROR: Java 17 or higher is required for LWJGL3ify. None was found.
-if exist "%JAVA_EXEC%" (
-    echo Selected Java version:
-    "%JAVA_EXEC%" -version 2>&1
-) else (
-    java -version 2>&1
-)
-echo Please set JAVA_CMD, JAVA_PATH, or JAVA_HOME to point to your Java 17+ / 21+ installation.
+echo Add Java 17+ to PATH or set JAVA_CMD, JAVA_PATH, or JAVA_HOME.
 if "%should_pause%"=="1" pause
 exit /b 1
+
+:try_java
+if not exist "%~1" exit /b 0
+powershell -NoProfile -Command "$v=((& '%~1' -version 2>&1 | Select-Object -First 1) -split [char]34)[1].Split('.'); $major=if ($v[0] -eq '1') { [int]$v[1] } else { [int]$v[0] }; if ($major -ge 17) { exit 0 } else { exit 1 }" >nul 2>&1
+if not errorlevel 1 set "JAVA_EXEC=%~1"
+exit /b 0
 
 :java_found
 rem Accept EULA
 echo eula=true > eula.txt
 
-rem 5. Materialize large-file pointers from the checksum-verified NTNH release.
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0resolve-release.ps1"
+rem Download large files from their upstream sources.
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0download-files.ps1"
 if errorlevel 1 (
     if "%should_pause%"=="1" pause
     exit /b 1
