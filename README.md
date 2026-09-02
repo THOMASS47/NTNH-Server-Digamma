@@ -1,6 +1,6 @@
 # NTNH Digamma server
 
-Server repository for the Digamma instance of **Nuclear Tech: New Horizons** 2.13.0, a Minecraft 1.7.10 modpack.
+Server repository for the Digamma instance of **Nuclear Tech: New Horizons** 2.14.0, a Minecraft 1.7.10 modpack.
 
 This fork tracks [NTNH-Server](https://github.com/NTNewHorizons/NTNH-Server) while retaining Digamma-specific authentication, administration, configuration, launcher, and branding changes.
 
