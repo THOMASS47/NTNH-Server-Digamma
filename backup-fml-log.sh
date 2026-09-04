@@ -4,7 +4,7 @@
 # log first, using the same dated, gzip-compressed style as Minecraft's logs.
 set -u
 
-source_log="${FML_LOG_FILE:-fml-server-latest.log}"
+source_log="${FML_LOG_FILE:-logs/fml-server-latest.log}"
 archive_dir="${FML_LOG_ARCHIVE_DIR:-logs}"
 
 # A missing log is normal on the first server start.
@@ -46,10 +46,5 @@ if ! mv -- "$temporary_archive" "$archive"; then
     exit 1
 fi
 
-if ! rm -- "$source_log"; then
-    echo "ERROR: Archived $source_log, but could not remove the original." >&2
-    exit 1
-fi
-
 trap - EXIT HUP INT TERM
-echo "Archived $source_log as $archive"
+echo "Archived a copy of $source_log as $archive; original retained"
