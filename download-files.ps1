@@ -37,30 +37,50 @@ foreach ($path in $candidatePaths) {
     }
 
     $relativePath = [System.IO.Path]::GetFullPath($path).Substring($serverRoot.Length + 1).Replace("\", "/")
+    $pointerLines = Get-Content -LiteralPath $path
+    $expectedOid = (($pointerLines | Where-Object { $_ -like "oid sha256:*" } | Select-Object -First 1) -replace "^oid sha256:", "").Trim()
+    $expectedSize = [int64](($pointerLines | Where-Object { $_ -like "size *" } | Select-Object -First 1) -replace "^size ", "")
+    $sourceLabel = "its upstream source"
+
     if ($relativePath -like "mods/HBM-*.jar") {
-        if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-            throw "Git with Git LFS is required to download $relativePath."
+        $gitCommand = Get-Command git -ErrorAction SilentlyContinue
+        if (-not $gitCommand) {
+            Write-Warning "Git is unavailable; using the repository LFS media fallback for $relativePath."
+        }
+        else {
+            & git lfs version *> $null
+            if ($LASTEXITCODE -ne 0) {
+                Write-Warning "Git LFS is unavailable ('git lfs version' failed); using the repository LFS media fallback for $relativePath."
+            }
+            else {
+                Write-Host "Downloading $relativePath with Git LFS..."
+                & git lfs pull "--include=$relativePath" "--exclude="
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Warning "'git lfs pull' failed; using the repository LFS media fallback for $relativePath."
+                }
+                elseif (Test-LfsPointer $path) {
+                    Write-Warning "Git LFS left $relativePath unresolved; using the repository LFS media fallback."
+                }
+                else {
+                    Write-Host "Downloaded and verified $relativePath"
+                    continue
+                }
+            }
         }
 
-        & git lfs version *> $null
-        if ($LASTEXITCODE -ne 0) {
-            throw "Git LFS is required to download $relativePath."
+        $revision = $env:NTNH_REVISION
+        if (-not $revision -and $gitCommand) {
+            $revision = (& git rev-parse HEAD 2>$null | Select-Object -First 1)
         }
-
-        Write-Host "Downloading $relativePath with Git LFS..."
-        & git lfs pull "--include=$relativePath" "--exclude="
-        if ($LASTEXITCODE -ne 0) {
-            throw "Git LFS failed to download $relativePath."
+        if (-not $revision) {
+            $revision = "main"
         }
-        if (-not (Test-Path -LiteralPath $path -PathType Leaf) -or (Test-LfsPointer $path)) {
-            throw "Git LFS left $relativePath as a pointer."
-        }
-
-        Write-Host "Downloaded and verified $relativePath"
-        continue
+        $serverRepo = if ($env:NTNH_SERVER_REPO) { $env:NTNH_SERVER_REPO } else { "THOMASS47/NTNH-Server-Digamma" }
+        $source = if ($env:NTNH_HBM_URL) { $env:NTNH_HBM_URL } else { "https://media.githubusercontent.com/media/$serverRepo/$revision/$relativePath" }
+        $sourceLabel = "the repository LFS media fallback"
     }
-
-    switch -Wildcard ($relativePath) {
+    else {
+        switch -Wildcard ($relativePath) {
         "forge-1.7.10-10.13.4.1614-1.7.10-universal.jar" {
             $source = if ($env:NTNH_FORGE_URL) { $env:NTNH_FORGE_URL } else { "https://maven.minecraftforge.net/net/minecraftforge/forge/1.7.10-10.13.4.1614-1.7.10/forge-1.7.10-10.13.4.1614-1.7.10-universal.jar" }
         }
@@ -70,15 +90,13 @@ foreach ($path in $candidatePaths) {
         default {
             throw "No download source configured for $relativePath"
         }
+        }
     }
 
-    $pointerLines = Get-Content -LiteralPath $path
-    $expectedOid = (($pointerLines | Where-Object { $_ -like "oid sha256:*" } | Select-Object -First 1) -replace "^oid sha256:", "").Trim()
-    $expectedSize = [int64](($pointerLines | Where-Object { $_ -like "size *" } | Select-Object -First 1) -replace "^size ", "")
     $downloadPath = "$path.download"
 
     try {
-        Write-Host "Downloading $relativePath from its upstream source..."
+        Write-Host "Downloading $relativePath from $sourceLabel..."
         Copy-OrDownload $source $downloadPath
 
         $actualOid = (Get-FileHash -Algorithm SHA256 -LiteralPath $downloadPath).Hash.ToLowerInvariant()

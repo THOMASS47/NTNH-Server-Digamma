@@ -30,21 +30,36 @@ for file in \
     [ -f "$file" ] || continue
     is_lfs_pointer "$file" || continue
 
+    expected_oid="$(awk '/^oid sha256:/{sub(/^oid sha256:/, ""); print; exit}' "$file")"
+    expected_size="$(awk '/^size /{print $2; exit}' "$file")"
+    source_label="its upstream source"
+
     case "$file" in
         mods/HBM-*.jar)
-            if ! command -v git >/dev/null 2>&1 || ! git lfs version >/dev/null 2>&1; then
-                echo "ERROR: Git LFS is required to download $file." >&2
-                exit 1
+            if ! command -v git >/dev/null 2>&1; then
+                echo "WARNING: Git is unavailable; using the repository LFS media fallback for $file." >&2
+            elif ! git lfs version >/dev/null 2>&1; then
+                echo "WARNING: Git LFS is unavailable ('git lfs version' failed); using the repository LFS media fallback for $file." >&2
+            else
+                echo "Downloading $file with Git LFS..."
+                if ! git lfs pull --include="$file" --exclude=""; then
+                    echo "WARNING: 'git lfs pull' failed; using the repository LFS media fallback for $file." >&2
+                elif is_lfs_pointer "$file"; then
+                    echo "WARNING: Git LFS left $file unresolved; using the repository LFS media fallback." >&2
+                else
+                    echo "Downloaded and verified $file"
+                    continue
+                fi
             fi
 
-            echo "Downloading $file with Git LFS..."
-            git lfs pull --include="$file" --exclude=""
-            if [ ! -f "$file" ] || is_lfs_pointer "$file"; then
-                echo "ERROR: Git LFS left $file as a pointer." >&2
-                exit 1
+            revision="${NTNH_REVISION:-}"
+            if [ -z "$revision" ] && command -v git >/dev/null 2>&1; then
+                revision="$(git rev-parse HEAD 2>/dev/null || true)"
             fi
-            echo "Downloaded and verified $file"
-            continue
+            revision="${revision:-main}"
+            server_repo="${NTNH_SERVER_REPO:-THOMASS47/NTNH-Server-Digamma}"
+            source="${NTNH_HBM_URL:-https://media.githubusercontent.com/media/$server_repo/$revision/$file}"
+            source_label="the repository LFS media fallback"
             ;;
         forge-1.7.10-10.13.4.1614-1.7.10-universal.jar)
             source="${NTNH_FORGE_URL:-https://maven.minecraftforge.net/net/minecraftforge/forge/1.7.10-10.13.4.1614-1.7.10/forge-1.7.10-10.13.4.1614-1.7.10-universal.jar}"
@@ -58,12 +73,10 @@ for file in \
             ;;
     esac
 
-    expected_oid="$(awk '/^oid sha256:/{sub(/^oid sha256:/, ""); print; exit}' "$file")"
-    expected_size="$(awk '/^size /{print $2; exit}' "$file")"
     download="${file}.download"
     trap 'rm -f "$download"' EXIT
 
-    echo "Downloading $file from its upstream source..."
+    echo "Downloading $file from $source_label..."
     fetch_file "$source" "$download"
 
     actual_oid="$(sha256sum "$download" | awk '{print $1}')"
