@@ -6,13 +6,18 @@ if ($env:NTNH_SERVER_ROOT) {
 Set-Location $serverRoot
 
 $pointerMarker = "version https://git-lfs.github.com/spec/v1"
-$clientRepo = if ($env:NTNH_CLIENT_REPO) { $env:NTNH_CLIENT_REPO } else { "NTNewHorizons/NTNH" }
 
 $candidatePaths = @(
     "forge-1.7.10-10.13.4.1614-1.7.10-universal.jar",
     "minecraft_server.1.7.10.jar"
 )
 $candidatePaths += @(Get-ChildItem -Path "mods\HBM-*.jar" -File -ErrorAction SilentlyContinue | ForEach-Object FullName)
+
+function Test-LfsPointer([string]$Path) {
+    return (Test-Path -LiteralPath $Path -PathType Leaf) -and
+        (Get-Item -LiteralPath $Path).Length -le 4096 -and
+        (Get-Content -LiteralPath $Path -TotalCount 1 -ErrorAction SilentlyContinue) -eq $pointerMarker
+}
 
 function Copy-OrDownload([string]$Source, [string]$Destination) {
     if (Test-Path -LiteralPath $Source -PathType Leaf) {
@@ -27,30 +32,40 @@ foreach ($path in $candidatePaths) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
         continue
     }
-    if ((Get-Content -LiteralPath $path -TotalCount 1 -ErrorAction SilentlyContinue) -ne $pointerMarker) {
+    if (-not (Test-LfsPointer $path)) {
         continue
     }
 
     $relativePath = [System.IO.Path]::GetFullPath($path).Substring($serverRoot.Length + 1).Replace("\", "/")
+    if ($relativePath -like "mods/HBM-*.jar") {
+        if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+            throw "Git with Git LFS is required to download $relativePath."
+        }
+
+        & git lfs version *> $null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Git LFS is required to download $relativePath."
+        }
+
+        Write-Host "Downloading $relativePath with Git LFS..."
+        & git lfs pull "--include=$relativePath" "--exclude="
+        if ($LASTEXITCODE -ne 0) {
+            throw "Git LFS failed to download $relativePath."
+        }
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf) -or (Test-LfsPointer $path)) {
+            throw "Git LFS left $relativePath as a pointer."
+        }
+
+        Write-Host "Downloaded and verified $relativePath"
+        continue
+    }
+
     switch -Wildcard ($relativePath) {
         "forge-1.7.10-10.13.4.1614-1.7.10-universal.jar" {
             $source = if ($env:NTNH_FORGE_URL) { $env:NTNH_FORGE_URL } else { "https://maven.minecraftforge.net/net/minecraftforge/forge/1.7.10-10.13.4.1614-1.7.10/forge-1.7.10-10.13.4.1614-1.7.10-universal.jar" }
         }
         "minecraft_server.1.7.10.jar" {
             $source = if ($env:NTNH_MINECRAFT_SERVER_URL) { $env:NTNH_MINECRAFT_SERVER_URL } else { "https://launcher.mojang.com/v1/objects/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar" }
-        }
-        "mods/HBM-*.jar" {
-            if ($env:NTNH_HBM_URL) {
-                $source = $env:NTNH_HBM_URL
-            }
-            else {
-                $versionPath = Join-Path $serverRoot ".ntnh-version"
-                if (-not $env:NTNH_VERSION -and -not (Test-Path -LiteralPath $versionPath -PathType Leaf)) {
-                    throw "Missing .ntnh-version; cannot select the matching HBM jar."
-                }
-                $version = if ($env:NTNH_VERSION) { $env:NTNH_VERSION } else { (Get-Content -LiteralPath $versionPath -Raw).Trim() }
-                $source = "https://media.githubusercontent.com/media/$clientRepo/$version/$relativePath"
-            }
         }
         default {
             throw "No download source configured for $relativePath"

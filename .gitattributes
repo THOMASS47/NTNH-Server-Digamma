@@ -4,6 +4,5 @@
 # installs never need to download them.
 #
 # The HBM mod jar is ~112 MB and exceeds GitHub's normal per-file size limit, so
-# the repository stores it as an LFS pointer. The launchers download it directly
-# from the matching version of the NTNH client repository; users do not need Git LFS.
+# the repository stores and downloads it with Git LFS.
 mods/HBM-*.jar filter=lfs diff=lfs merge=lfs -text
